@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+    
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.6.0/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_163b33f1ac7a75e8a8cc91b9cbe3a436 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+            </style>
+        
+</head>
+<body>
+    
+    
+<div style="position: fixed; 
+     bottom: 50px; left: 50px; width: 200px; height: 120px; 
+     border:2px solid grey; z-index:9999; font-size:14px;
+     ">&nbsp; Legend <br>
+     &nbsp; Beaches &nbsp; <i class="fa fa-map-marker fa-2x" style="color:blue"></i><br>
+     &nbsp; Taverns &nbsp; <i class="fa fa-map-marker fa-2x" style="color:red"></i><br>
+     &nbsp; Gorges & Caves &nbsp; <i class="fa fa-map-marker fa-2x" style="color:green"></i><br>
+     &nbsp; Archaeological Sites &nbsp; <i class="fa fa-map-marker fa-2x" style="color:darkred"></i><br>
+     &nbsp; Monasteries &nbsp; <i class="fa fa-map-marker fa-2x" style="color:purple"></i>
+</div>
+    
+            <div class="folium-map" id="map_163b33f1ac7a75e8a8cc91b9cbe3a436" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_163b33f1ac7a75e8a8cc91b9cbe3a436 = L.map(
+                "map_163b33f1ac7a75e8a8cc91b9cbe3a436",
+                {
+                    center: [35.1446, 24.9],
+                    crs: L.CRS.EPSG3857,
+                    zoom: 13,
+                    zoomControl: true,
+                    preferCanvas: false,
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_15ee9bc260a48c6fd40ccde60e2f30cb = L.tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {"attribution": "Data by \u0026copy; \u003ca href=\"http://openstreetmap.org\"\u003eOpenStreetMap\u003c/a\u003e, under \u003ca href=\"http://www.openstreetmap.org/copyright\"\u003eODbL\u003c/a\u003e.", "detectRetina": false, "maxNativeZoom": 18, "maxZoom": 18, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var marker_4b313e5e3c2d814482b1dd75f33a1cfb = L.marker(
+                [35.159, 24.9022],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_a7f4bb986e718510ad01c56ec1aee0a0 = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "green", "prefix": "glyphicon"}
+            );
+            marker_4b313e5e3c2d814482b1dd75f33a1cfb.setIcon(icon_a7f4bb986e718510ad01c56ec1aee0a0);
+        
+    
+        var popup_a062767e74a308f2b5f3f8ca03dc3bb6 = L.popup({"maxWidth": "100%"});
+
+        
+            var html_5ab912ab0608c2073a09afc5841a4943 = $(`<div id="html_5ab912ab0608c2073a09afc5841a4943" style="width: 100.0%; height: 100.0%;">Rouvas Gorge</div>`)[0];
+            popup_a062767e74a308f2b5f3f8ca03dc3bb6.setContent(html_5ab912ab0608c2073a09afc5841a4943);
+        
+
+        marker_4b313e5e3c2d814482b1dd75f33a1cfb.bindPopup(popup_a062767e74a308f2b5f3f8ca03dc3bb6)
+        ;
+
+        
+    
+    
+            var marker_97d056b53a32a21dbdb988a768bac9e2 = L.marker(
+                [35.13, 24.92],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_19c578f5938e382374304865c1a254e3 = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "green", "prefix": "glyphicon"}
+            );
+            marker_97d056b53a32a21dbdb988a768bac9e2.setIcon(icon_19c578f5938e382374304865c1a254e3);
+        
+    
+        var popup_b65c45aa89d905a4be434d372072e4b5 = L.popup({"maxWidth": "100%"});
+
+        
+            var html_ea6239686118f389d7338e5f9fa5dda5 = $(`<div id="html_ea6239686118f389d7338e5f9fa5dda5" style="width: 100.0%; height: 100.0%;">Agios Nikolaos Gorge</div>`)[0];
+            popup_b65c45aa89d905a4be434d372072e4b5.setContent(html_ea6239686118f389d7338e5f9fa5dda5);
+        
+
+        marker_97d056b53a32a21dbdb988a768bac9e2.bindPopup(popup_b65c45aa89d905a4be434d372072e4b5)
+        ;
+
+        
+    
+    
+            var marker_462810c1351a4b0cf2acbabc1a6d75ed = L.marker(
+                [35.1667, 24.9167],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_1b5457c229cb8e2855bb8c94119260ff = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "darkred", "prefix": "glyphicon"}
+            );
+            marker_462810c1351a4b0cf2acbabc1a6d75ed.setIcon(icon_1b5457c229cb8e2855bb8c94119260ff);
+        
+    
+        var popup_5286b82e86610a779b456f168b7585e6 = L.popup({"maxWidth": "100%"});
+
+        
+            var html_6716da8aa9f748a46846bfc35d796a72 = $(`<div id="html_6716da8aa9f748a46846bfc35d796a72" style="width: 100.0%; height: 100.0%;">Minoan Sacred Cave of Rouvas</div>`)[0];
+            popup_5286b82e86610a779b456f168b7585e6.setContent(html_6716da8aa9f748a46846bfc35d796a72);
+        
+
+        marker_462810c1351a4b0cf2acbabc1a6d75ed.bindPopup(popup_5286b82e86610a779b456f168b7585e6)
+        ;
+
+        
+    
+    
+            var marker_caf7667287dcdd05db530e50d05a172d = L.marker(
+                [35.0578, 24.8778],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_ed1f6a969848d9e7511dc9e280677fc7 = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "darkred", "prefix": "glyphicon"}
+            );
+            marker_caf7667287dcdd05db530e50d05a172d.setIcon(icon_ed1f6a969848d9e7511dc9e280677fc7);
+        
+    
+        var popup_10011fe657b73ddb2200fa3d829a3928 = L.popup({"maxWidth": "100%"});
+
+        
+            var html_8e7a90223efa348f47c857653bd8edd7 = $(`<div id="html_8e7a90223efa348f47c857653bd8edd7" style="width: 100.0%; height: 100.0%;">Ancient Gortyna</div>`)[0];
+            popup_10011fe657b73ddb2200fa3d829a3928.setContent(html_8e7a90223efa348f47c857653bd8edd7);
+        
+
+        marker_caf7667287dcdd05db530e50d05a172d.bindPopup(popup_10011fe657b73ddb2200fa3d829a3928)
+        ;
+
+        
+    
+    
+            var marker_9497e84baa45b63ffbe6af8f1b2e6ec1 = L.marker(
+                [35.1403, 24.8861],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_8cfa1892f537399f8b872b214c46ade6 = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "purple", "prefix": "glyphicon"}
+            );
+            marker_9497e84baa45b63ffbe6af8f1b2e6ec1.setIcon(icon_8cfa1892f537399f8b872b214c46ade6);
+        
+    
+        var popup_0a73a7d3b67bf53e2e4fca41e04b65f2 = L.popup({"maxWidth": "100%"});
+
+        
+            var html_a97441082aa048cd18bf6287ae1cceca = $(`<div id="html_a97441082aa048cd18bf6287ae1cceca" style="width: 100.0%; height: 100.0%;">Vrontisi Monastery</div>`)[0];
+            popup_0a73a7d3b67bf53e2e4fca41e04b65f2.setContent(html_a97441082aa048cd18bf6287ae1cceca);
+        
+
+        marker_9497e84baa45b63ffbe6af8f1b2e6ec1.bindPopup(popup_0a73a7d3b67bf53e2e4fca41e04b65f2)
+        ;
+
+        
+    
+    
+            var marker_e24c56b607ad23ae767a0762bd90f8c4 = L.marker(
+                [35.135, 24.93],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_d3f87c7126928000372e3d70c0f41a35 = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "purple", "prefix": "glyphicon"}
+            );
+            marker_e24c56b607ad23ae767a0762bd90f8c4.setIcon(icon_d3f87c7126928000372e3d70c0f41a35);
+        
+    
+        var popup_31aa8f1f283e94cfeb97672d9b58214c = L.popup({"maxWidth": "100%"});
+
+        
+            var html_b5b37f012ec1b32fca805b9972bc93d1 = $(`<div id="html_b5b37f012ec1b32fca805b9972bc93d1" style="width: 100.0%; height: 100.0%;">Monastery of Saint Nicholas</div>`)[0];
+            popup_31aa8f1f283e94cfeb97672d9b58214c.setContent(html_b5b37f012ec1b32fca805b9972bc93d1);
+        
+
+        marker_e24c56b607ad23ae767a0762bd90f8c4.bindPopup(popup_31aa8f1f283e94cfeb97672d9b58214c)
+        ;
+
+        
+    
+    
+            var marker_5182a53cd33ae2cd403dc1bb17e2eed8 = L.marker(
+                [35.1427, 24.8983],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_c276364d254d4963f8fb14c9d148215e = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "green", "prefix": "glyphicon"}
+            );
+            marker_5182a53cd33ae2cd403dc1bb17e2eed8.setIcon(icon_c276364d254d4963f8fb14c9d148215e);
+        
+    
+        var popup_644b09a319698b3738b0796c28336a9a = L.popup({"maxWidth": "100%"});
+
+        
+            var html_6fdf1127d33faf8ae9c04d8f9db48772 = $(`<div id="html_6fdf1127d33faf8ae9c04d8f9db48772" style="width: 100.0%; height: 100.0%;">Lake Zaros</div>`)[0];
+            popup_644b09a319698b3738b0796c28336a9a.setContent(html_6fdf1127d33faf8ae9c04d8f9db48772);
+        
+
+        marker_5182a53cd33ae2cd403dc1bb17e2eed8.bindPopup(popup_644b09a319698b3738b0796c28336a9a)
+        ;
+
+        
+    
+    
+            var marker_8cd978a5e7b1af1e475958a117c2d156 = L.marker(
+                [35.2997, 24.8211],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_1d8086dfb5a61679ed8539092c00e6bf = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "green", "prefix": "glyphicon"}
+            );
+            marker_8cd978a5e7b1af1e475958a117c2d156.setIcon(icon_1d8086dfb5a61679ed8539092c00e6bf);
+        
+    
+        var popup_5e7c288d61d5f2bfc03ed94960d85f0b = L.popup({"maxWidth": "100%"});
+
+        
+            var html_b09e911b1d53677ac342356e78567a59 = $(`<div id="html_b09e911b1d53677ac342356e78567a59" style="width: 100.0%; height: 100.0%;">Sfendoni Cave</div>`)[0];
+            popup_5e7c288d61d5f2bfc03ed94960d85f0b.setContent(html_b09e911b1d53677ac342356e78567a59);
+        
+
+        marker_8cd978a5e7b1af1e475958a117c2d156.bindPopup(popup_5e7c288d61d5f2bfc03ed94960d85f0b)
+        ;
+
+        
+    
+    
+            var marker_6cb6bdfd4d25ce3bce60e6f26d7f9947 = L.marker(
+                [34.9961, 24.749],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_c6a2c016d11b36b09d2894fedc22e37e = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "blue", "prefix": "glyphicon"}
+            );
+            marker_6cb6bdfd4d25ce3bce60e6f26d7f9947.setIcon(icon_c6a2c016d11b36b09d2894fedc22e37e);
+        
+    
+        var popup_518ecd39ad64e1b7de30954f4502c9b4 = L.popup({"maxWidth": "100%"});
+
+        
+            var html_7c7913efbccd640be4fed04fa1654db8 = $(`<div id="html_7c7913efbccd640be4fed04fa1654db8" style="width: 100.0%; height: 100.0%;">Matala Beach</div>`)[0];
+            popup_518ecd39ad64e1b7de30954f4502c9b4.setContent(html_7c7913efbccd640be4fed04fa1654db8);
+        
+
+        marker_6cb6bdfd4d25ce3bce60e6f26d7f9947.bindPopup(popup_518ecd39ad64e1b7de30954f4502c9b4)
+        ;
+
+        
+    
+    
+            var marker_922d901e839f000b2fdbd8fa9c9aeb76 = L.marker(
+                [34.9997, 24.7717],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_803ab1810321a5ca12c8dff93b5223e5 = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "blue", "prefix": "glyphicon"}
+            );
+            marker_922d901e839f000b2fdbd8fa9c9aeb76.setIcon(icon_803ab1810321a5ca12c8dff93b5223e5);
+        
+    
+        var popup_f70eb3ce534323d5fdc006203393cbcb = L.popup({"maxWidth": "100%"});
+
+        
+            var html_31ad99b67df3011cca88138128180392 = $(`<div id="html_31ad99b67df3011cca88138128180392" style="width: 100.0%; height: 100.0%;">Kommos Beach</div>`)[0];
+            popup_f70eb3ce534323d5fdc006203393cbcb.setContent(html_31ad99b67df3011cca88138128180392);
+        
+
+        marker_922d901e839f000b2fdbd8fa9c9aeb76.bindPopup(popup_f70eb3ce534323d5fdc006203393cbcb)
+        ;
+
+        
+    
+    
+            var marker_8454de032efc32919bbc8d1567cf5e18 = L.marker(
+                [34.9867, 24.7506],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_bd7a17cf05665c9d65afb9204f04a27d = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "blue", "prefix": "glyphicon"}
+            );
+            marker_8454de032efc32919bbc8d1567cf5e18.setIcon(icon_bd7a17cf05665c9d65afb9204f04a27d);
+        
+    
+        var popup_20eb2f5a97a5ce54edf22f73a76c1159 = L.popup({"maxWidth": "100%"});
+
+        
+            var html_1be580bbbe82ea8c9f53e132274d525a = $(`<div id="html_1be580bbbe82ea8c9f53e132274d525a" style="width: 100.0%; height: 100.0%;">Red Beach</div>`)[0];
+            popup_20eb2f5a97a5ce54edf22f73a76c1159.setContent(html_1be580bbbe82ea8c9f53e132274d525a);
+        
+
+        marker_8454de032efc32919bbc8d1567cf5e18.bindPopup(popup_20eb2f5a97a5ce54edf22f73a76c1159)
+        ;
+
+        
+    
+    
+            var marker_fc250b7a12598b11bee9b50c5609a775 = L.marker(
+                [35.1415, 24.889],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_065ce2c4bcbe6a44126da9d7dd97ebf7 = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "red", "prefix": "glyphicon"}
+            );
+            marker_fc250b7a12598b11bee9b50c5609a775.setIcon(icon_065ce2c4bcbe6a44126da9d7dd97ebf7);
+        
+    
+        var popup_3b018e99c60e3731632f0bfda9573600 = L.popup({"maxWidth": "100%"});
+
+        
+            var html_8f36daf199dd341ee1c094c50b6a682c = $(`<div id="html_8f36daf199dd341ee1c094c50b6a682c" style="width: 100.0%; height: 100.0%;">Vorizo Tavern</div>`)[0];
+            popup_3b018e99c60e3731632f0bfda9573600.setContent(html_8f36daf199dd341ee1c094c50b6a682c);
+        
+
+        marker_fc250b7a12598b11bee9b50c5609a775.bindPopup(popup_3b018e99c60e3731632f0bfda9573600)
+        ;
+
+        
+    
+    
+            var marker_5d0948ce987ad5a0a1a208fba8cfde01 = L.marker(
+                [35.1428, 24.8951],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_4bc1e4ce4f1b0721a4f1193afa1e5afe = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "red", "prefix": "glyphicon"}
+            );
+            marker_5d0948ce987ad5a0a1a208fba8cfde01.setIcon(icon_4bc1e4ce4f1b0721a4f1193afa1e5afe);
+        
+    
+        var popup_08facc00519dbcef89900f6035df905b = L.popup({"maxWidth": "100%"});
+
+        
+            var html_8f09e2fb99e222216fc76074bd8f914c = $(`<div id="html_8f09e2fb99e222216fc76074bd8f914c" style="width: 100.0%; height: 100.0%;">Kampos Tavern</div>`)[0];
+            popup_08facc00519dbcef89900f6035df905b.setContent(html_8f09e2fb99e222216fc76074bd8f914c);
+        
+
+        marker_5d0948ce987ad5a0a1a208fba8cfde01.bindPopup(popup_08facc00519dbcef89900f6035df905b)
+        ;
+
+        
+    
+    
+            var marker_06f41c2474cd200815e6ee84e141f9a7 = L.marker(
+                [35.1427, 24.8983],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_0d8de0745970d02b06844fe3be213f0c = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "red", "prefix": "glyphicon"}
+            );
+            marker_06f41c2474cd200815e6ee84e141f9a7.setIcon(icon_0d8de0745970d02b06844fe3be213f0c);
+        
+    
+        var popup_b3e2dfc14f1020462c1467fcd60f7993 = L.popup({"maxWidth": "100%"});
+
+        
+            var html_1eeabff062d3c6d88e482d4b750e31ad = $(`<div id="html_1eeabff062d3c6d88e482d4b750e31ad" style="width: 100.0%; height: 100.0%;">Elaides Tavern</div>`)[0];
+            popup_b3e2dfc14f1020462c1467fcd60f7993.setContent(html_1eeabff062d3c6d88e482d4b750e31ad);
+        
+
+        marker_06f41c2474cd200815e6ee84e141f9a7.bindPopup(popup_b3e2dfc14f1020462c1467fcd60f7993)
+        ;
+
+        
+    
+    
+            var marker_84df0391bf0ec53a3cb5dee4a4b17d2c = L.marker(
+                [35.1418, 24.8935],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_e1215489717fad6be79e7d0cee1f357f = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "red", "prefix": "glyphicon"}
+            );
+            marker_84df0391bf0ec53a3cb5dee4a4b17d2c.setIcon(icon_e1215489717fad6be79e7d0cee1f357f);
+        
+    
+        var popup_71a5d40d14c352bd1f335c60dee8b5cf = L.popup({"maxWidth": "100%"});
+
+        
+            var html_d1a3db9c154b9c555283ddc03a3cc636 = $(`<div id="html_d1a3db9c154b9c555283ddc03a3cc636" style="width: 100.0%; height: 100.0%;">Petrinos Mylos Tavern</div>`)[0];
+            popup_71a5d40d14c352bd1f335c60dee8b5cf.setContent(html_d1a3db9c154b9c555283ddc03a3cc636);
+        
+
+        marker_84df0391bf0ec53a3cb5dee4a4b17d2c.bindPopup(popup_71a5d40d14c352bd1f335c60dee8b5cf)
+        ;
+
+        
+    
+    
+            var marker_7d25980d2eaedb5d68f48eac58110af0 = L.marker(
+                [35.1427, 24.8983],
+                {}
+            ).addTo(map_163b33f1ac7a75e8a8cc91b9cbe3a436);
+        
+    
+            var icon_04450b012857034b26961946f9feb5c8 = L.AwesomeMarkers.icon(
+                {"extraClasses": "fa-rotate-0", "icon": "info-sign", "iconColor": "white", "markerColor": "red", "prefix": "glyphicon"}
+            );
+            marker_7d25980d2eaedb5d68f48eac58110af0.setIcon(icon_04450b012857034b26961946f9feb5c8);
+        
+    
+        var popup_dba4b1d0583ae7dd5f157ca573b05e0a = L.popup({"maxWidth": "100%"});
+
+        
+            var html_4ad0813654a19a7c5c90aeeded31c2d1 = $(`<div id="html_4ad0813654a19a7c5c90aeeded31c2d1" style="width: 100.0%; height: 100.0%;">Limni Cafe Restaurant</div>`)[0];
+            popup_dba4b1d0583ae7dd5f157ca573b05e0a.setContent(html_4ad0813654a19a7c5c90aeeded31c2d1);
+        
+
+        marker_7d25980d2eaedb5d68f48eac58110af0.bindPopup(popup_dba4b1d0583ae7dd5f157ca573b05e0a)
+        ;
+
+        
+    
+</script>
+</html>
