@@ -125,7 +125,7 @@
 
     // [lat, lng, category, name EL, name EN]
     var pois = [
-      [35.1302, 24.9032, "stay", "Zaros Filoxenia Apartments — Μαέρα & Διόνυσος", "Zaros Filoxenia Apartments — Maera & Dionysos"],
+      [35.130187, 24.903187, "stay", "Zaros Filoxenia Apartments — Μαέρα & Διόνυσος", "Zaros Filoxenia Apartments — Maera & Dionysos"],
       [35.1427, 24.8983, "nature", "Λίμνη Ζαρού (Βότομος)", "Lake Zaros (Votomos)"],
       [35.13,   24.92,   "nature", "Φαράγγι Αγίου Νικολάου", "Agios Nikolaos Gorge"],
       [35.159,  24.9022, "nature", "Δάσος Ρούβα", "Rouvas Forest"],
