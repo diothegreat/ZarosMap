@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Μαέρα &amp; Διόνυσος — Πετρόκτιστα Καταλύματα στον Ζαρό Κρήτης | Zaros Accommodation Crete</title>
+  <meta name="description" content="Διαμονή στον Ζαρό Ηρακλείου: δύο πετρόκτιστα καταλύματα 70 τ.μ. — Μαέρα &amp; Διόνυσος — δίπλα στη λίμνη Ζαρού και το φαράγγι του Ρούβα. Zaros accommodation Crete, stone-built apartments near Rouvas gorge.">
+  <meta name="keywords" content="διαμονή Ζαρός, καταλύματα Ζαρός Κρήτη, Zaros accommodation Crete, Rouva gorge stay, Zaros apartments, πετρόκτιστο κατάλυμα Κρήτη">
+  <meta property="og:title" content="Μαέρα &amp; Διόνυσος — Πετρόκτιστη φιλοξενία στον Ζαρό Κρήτης">
+  <meta property="og:description" content="Δύο πετρόκτιστα καταλύματα 70 τ.μ. στη ρίζα του Ψηλορείτη, δίπλα στη λίμνη Ζαρού και το φαράγγι του Ρούβα.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="el_GR">
+  <meta property="og:locale:alternate" content="en_US">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LodgingBusiness",
+    "name": "Μαέρα & Διόνυσος — Zaros Stone Apartments",
+    "description": "Two stone-built holiday apartments (70 m² each) in Zaros, Heraklion, Crete, near Lake Zaros and Rouvas gorge.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Zaros",
+      "addressRegion": "Heraklion, Crete",
+      "addressCountry": "GR"
+    },
+    "geo": { "@type": "GeoCoordinates", "latitude": 35.1333, "longitude": 24.9014 },
+    "priceRange": "€50 - €80",
+    "petsAllowed": false,
+    "amenityFeature": [
+      { "@type": "LocationFeatureSpecification", "name": "Free WiFi" },
+      { "@type": "LocationFeatureSpecification", "name": "Air conditioning" },
+      { "@type": "LocationFeatureSpecification", "name": "Full kitchen" },
+      { "@type": "LocationFeatureSpecification", "name": "Shared courtyard" }
+    ]
+  }
+  </script>
+</head>
+<body>
+
+<!-- ===================== HEADER ===================== -->
+<header class="site-header" id="siteHeader">
+  <nav class="nav container">
+    <a href="#hero" class="brand">
+      <span class="brand-mark">Μ&amp;Δ</span>
+      <span class="brand-name" data-en="Maera &amp; Dionysos">Μαέρα &amp; Διόνυσος</span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#apartments" data-en="The Apartments">Τα Καταλύματα</a></li>
+      <li><a href="#courtyard" data-en="Courtyard">Η Αυλή</a></li>
+      <li><a href="#guide" data-en="Explore Zaros">Ο Ζαρός</a></li>
+      <li><a href="#pricing" data-en="Prices">Τιμές</a></li>
+      <li><a href="#gallery" data-en="Gallery">Gallery</a></li>
+      <li><a href="#contact" data-en="Contact">Επικοινωνία</a></li>
+      <li><a href="#booking" class="btn btn-small btn-solid" data-en="Book Now">Κράτηση</a></li>
+      <li>
+        <button class="lang-toggle" id="langToggle" aria-label="Language">
+          <span class="lang-el">EN</span>
+        </button>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero" id="hero">
+  <div class="hero-bg ph-hero" role="img" aria-label="Πετρόκτιστα καταλύματα στον Ζαρό"></div>
+  <div class="hero-content reveal">
+    <p class="hero-eyebrow" data-en="Zaros · Heraklion · Crete">Ζαρός · Ηράκλειο · Κρήτη</p>
+    <h1 data-en="Maera &amp; Dionysos">Μαέρα &amp; Διόνυσος</h1>
+    <p class="hero-tagline" data-en="Stone-built hospitality at the foot of Mount Psiloritis">Πετρόκτιστη φιλοξενία στη ρίζα του Ψηλορείτη</p>
+    <div class="hero-actions">
+      <a href="#apartments" class="btn btn-outline" data-en="See the apartments">Δείτε τα καταλύματα</a>
+      <a href="#booking" class="btn btn-solid" data-en="Book now">Κράτηση</a>
+    </div>
+  </div>
+  <div class="hero-scroll" aria-hidden="true">▾</div>
+</section>
+
+<!-- ===================== VIDEO ===================== -->
+<section class="section section-video" id="video">
+  <div class="container narrow">
+    <div class="video-frame reveal">
+      <video id="tourVideo" controls muted playsinline preload="none" loading="lazy"
+             poster="assets/video/tour-poster.jpg">
+        <source src="assets/video/apartments-tour.mp4" type="video/mp4">
+      </video>
+      <div class="video-placeholder" id="videoPlaceholder">
+        <div class="video-play">▶</div>
+        <p data-en="Video presentation of the two apartments — coming soon">Βίντεο παρουσίασης των δύο διαμερισμάτων — έρχεται σύντομα</p>
+        <small data-en="(placeholder — upload assets/video/apartments-tour.mp4)">(placeholder — ανεβάστε το assets/video/apartments-tour.mp4)</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== WELCOME ===================== -->
+<section class="section" id="welcome">
+  <div class="container narrow center reveal">
+    <p class="eyebrow" data-en="Welcome">Καλωσορίσατε</p>
+    <h2 data-en="A stone house, a courtyard, and the quiet of Zaros">Ένα πετρόκτιστο σπίτι, μια αυλή και η ησυχία του Ζαρού</h2>
+    <p class="lead" data-en="In one of Crete's greenest villages, at the foot of Psiloritis, two fully renovated stone apartments await you — Maera on the ground floor and Dionysos on the first floor. Between them, a shared courtyard with a lemon tree, a pomegranate tree and a large table for lingering evenings.">
+      Σε ένα από τα πιο καταπράσινα χωριά της Κρήτης, στους πρόποδες του Ψηλορείτη, σας περιμένουν δύο πλήρως φροντισμένα πετρόκτιστα διαμερίσματα — η Μαέρα στο ισόγειο και ο Διόνυσος στον πρώτο όροφο. Ανάμεσά τους, μια κοινή αυλή με λεμονιά, ροδιά και ένα μεγάλο τραπέζι για μεγάλες βραδιές.
+    </p>
+    <p class="lead" data-en="Your hostess, Pepi, welcomes every guest personally, shows you around your apartment and is always at hand for anything you may need during your stay.">
+      Η οικοδέσποινα, η <strong>Πέπη</strong>, υποδέχεται προσωπικά κάθε επισκέπτη, τον ξεναγεί στο διαμέρισμα και είναι πάντα διαθέσιμη για οτιδήποτε χρειαστεί κατά τη διαμονή.
+    </p>
+    <div class="trust-badges">
+      <div class="badge"><span class="badge-icon">✓</span><span data-en="Certified pest control">Πιστοποιητικό απεντόμωσης</span></div>
+      <div class="badge"><span class="badge-icon">💧</span><span data-en="Drinkable tap water">Πόσιμο νερό βρύσης</span></div>
+      <div class="badge"><span class="badge-icon">⛑</span><span data-en="First-aid kit &amp; fire extinguisher">Φαρμακείο &amp; πυροσβεστήρας</span></div>
+      <div class="badge"><span class="badge-icon">🤝</span><span data-en="Personal welcome by Pepi">Προσωπική υποδοχή από την Πέπη</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== APARTMENTS ===================== -->
+<section class="section section-alt" id="apartments">
+  <div class="container">
+    <div class="center reveal">
+      <p class="eyebrow" data-en="The Apartments">Τα Καταλύματα</p>
+      <h2 data-en="Two stone apartments, 70 m² each">Δύο πετρόκτιστα διαμερίσματα, 70 τ.μ. το καθένα</h2>
+    </div>
+    <div class="cards-grid">
+      <!-- Maera -->
+      <article class="card reveal">
+        <div class="card-photo ph ph-maera"><span data-en="Maera — photo placeholder">Μαέρα — φωτογραφία</span></div>
+        <div class="card-body">
+          <div class="card-head">
+            <h3>Μαέρα</h3>
+            <p class="card-meta" data-en="Ground floor · ~70 m² · up to 4 guests">Ισόγειο · ~70 τ.μ. · έως 4 άτομα</p>
+          </div>
+          <ul class="amenities">
+            <li data-en="Bedroom with double bed">Κρεβατοκάμαρα με διπλό κρεβάτι</li>
+            <li data-en="Living room with two single beds (4 guests total)">Σαλόνι με δύο μονά κρεβάτια (συνολικά 4 άτομα)</li>
+            <li data-en="2 air conditioners (kitchen &amp; bedroom)">2 air condition (κουζίνα &amp; κρεβατοκάμαρα)</li>
+            <li data-en="Fully equipped kitchen">Πλήρως εξοπλισμένη κουζίνα</li>
+            <li data-en="Washing machine &amp; tumble dryer">Πλυντήριο &amp; στεγνωτήριο ρούχων</li>
+            <li data-en="TV, free WiFi">Τηλεόραση, δωρεάν WiFi</li>
+            <li data-en="Hairdryer, iron, coffee maker">Σεσουάρ, ηλεκτρικό σίδερο, καφετιέρα</li>
+            <li data-en="Bathroom / WC">Τουαλέτα / μπάνιο</li>
+            <li data-en="First-aid kit &amp; fire extinguisher">Φαρμακείο &amp; πυροσβεστήρας</li>
+          </ul>
+          <div class="card-foot">
+            <p class="price"><span data-en="from">από</span> <strong>50&nbsp;€</strong> <span data-en="/ night (2 guests)">/ διανυκτέρευση (2 άτομα)</span></p>
+            <a href="#booking" class="btn btn-outline btn-small" data-unit="maera" data-en="Book Maera">Κράτηση Μαέρα</a>
+          </div>
+        </div>
+      </article>
+      <!-- Dionysos -->
+      <article class="card reveal">
+        <div class="card-photo ph ph-dionysos"><span data-en="Dionysos — photo placeholder">Διόνυσος — φωτογραφία</span></div>
+        <div class="card-body">
+          <div class="card-head">
+            <h3>Διόνυσος</h3>
+            <p class="card-meta" data-en="First floor · ~70 m² · up to 3 guests">Πρώτος όροφος · ~70 τ.μ. · έως 3 άτομα</p>
+          </div>
+          <ul class="amenities">
+            <li data-en="1 double bed + 1 single sofa bed (3 guests total)">1 διπλό κρεβάτι + 1 μονός καναπές-κρεβάτι (συνολικά 3 άτομα)</li>
+            <li data-en="2 air conditioners (kitchen &amp; bedroom)">2 air condition (κουζίνα &amp; κρεβατοκάμαρα)</li>
+            <li data-en="Fully equipped kitchen">Πλήρως εξοπλισμένη κουζίνα</li>
+            <li data-en="Washing machine">Πλυντήριο ρούχων</li>
+            <li data-en="TV">Τηλεόραση</li>
+            <li data-en="Desk in the living room">Γραφείο στο σαλόνι</li>
+            <li data-en="Balcony with umbrella, table &amp; chairs">Μπαλκόνι με ομπρέλα, τραπεζάκι και καρέκλες</li>
+            <li data-en="First-aid kit &amp; fire extinguisher">Φαρμακείο &amp; πυροσβεστήρας</li>
+          </ul>
+          <div class="card-foot">
+            <p class="price"><span data-en="from">από</span> <strong>60&nbsp;€</strong> <span data-en="/ night (2 guests)">/ διανυκτέρευση (2 άτομα)</span></p>
+            <a href="#booking" class="btn btn-outline btn-small" data-unit="dionysos" data-en="Book Dionysos">Κράτηση Διόνυσος</a>
+          </div>
+        </div>
+      </article>
+    </div>
+    <p class="note center reveal" data-en="Both apartments are fully stone-built with tiled roofs, professionally pest-controlled (with certificate), and share the courtyard and outdoor dining area. The tap water is crystal-clear and safe to drink straight from the tap.">
+      Και τα δύο καταλύματα είναι πλήρως πετρόκτιστα με κεραμίδι, έχουν απεντομωθεί πλήρως (με πιστοποιητικό) και μοιράζονται την αυλή και την εξωτερική τραπεζαρία. Το νερό της βρύσης είναι πεντακάθαρο και πόσιμο — πιείτε άφοβα απευθείας από τη βρύση.
+    </p>
+  </div>
+</section>
+
+<!-- ===================== COURTYARD ===================== -->
+<section class="section" id="courtyard">
+  <div class="container split">
+    <div class="split-photo ph ph-courtyard reveal"><span data-en="The courtyard — photo placeholder">Η αυλή — φωτογραφία</span></div>
+    <div class="split-text reveal">
+      <p class="eyebrow" data-en="Shared Spaces">Κοινόχρηστοι Χώροι</p>
+      <h2 data-en="The courtyard with the lemon &amp; pomegranate trees">Η αυλή με τη λεμονιά και τη ροδιά</h2>
+      <p data-en="The heart of the property is its shared courtyard: flowers, a lemon tree and a pomegranate tree, a large iron table seating 8, and an outdoor sofa. Ideal for shared meals, an afternoon book, or long evening gatherings under the trees.">
+        Η καρδιά του σπιτιού είναι η κοινή του αυλή: λουλούδια, μια λεμονιά και μια ροδιά, ένα μεγάλο σιδερένιο τραπέζι 8 ατόμων και εξωτερικός καναπές. Ιδανική για κοινό φαγητό, ένα βιβλίο το απόγευμα ή βραδινές συγκεντρώσεις κάτω από τα δέντρα.
+      </p>
+      <ul class="checklist">
+        <li data-en="Large iron table for 8 &amp; outdoor sofa">Μεγάλο σιδερένιο τραπέζι 8 ατόμων &amp; εξωτερικός καναπές</li>
+        <li data-en="Lemon tree, pomegranate tree &amp; flowers">Λεμονιά, ροδιά &amp; λουλούδια</li>
+        <li data-en="Shared by both apartments">Κοινή και για τα δύο καταλύματα</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== AREA GUIDE ===================== -->
+<section class="section section-alt" id="guide">
+  <div class="container">
+    <div class="center reveal">
+      <p class="eyebrow" data-en="Explore">Εξερευνήστε</p>
+      <h2 data-en="What to see in Zaros &amp; around">Τι να δείτε στον Ζαρό &amp; γύρω</h2>
+      <p class="lead narrow-lead" data-en="Zaros is one of Crete's most historic and greenest large villages, built at the foot of Psiloritis at ~450 m altitude, about 45 km southwest of Heraklion. It is famous for its abundant spring waters — its very name echoes the 'flowing waters' — its gorge, and its Byzantine monasteries with superb frescoes.">
+        Ο Ζαρός είναι ένα από τα πιο ιστορικά και καταπράσινα κεφαλοχώρια της Κρήτης, χτισμένος στους πρόποδες του Ψηλορείτη σε υψόμετρο ~450 μ., περίπου 45 χλμ. νοτιοδυτικά του Ηρακλείου. Φημίζεται για τα άφθονα, γάργαρα νερά του — το ίδιο το όνομα παραπέμπει στα «ζα-ρέοντα» νερά — το φαράγγι του και τα βυζαντινά μοναστήρια με τις υπέροχες τοιχογραφίες.
+      </p>
+    </div>
+
+    <div class="guide-grid">
+      <div class="guide-card reveal">
+        <h3><span class="gi">🌿</span> <span data-en="Nature &amp; Hiking">Φύση &amp; Πεζοπορία</span></h3>
+        <ul>
+          <li><strong data-en="Lake Zaros (Votomos):">Λίμνη Ζαρού (Βότομος):</strong> <span data-en="a tranquil spring-fed lake under plane trees, right next to the apartments. Lakeside tavernas serve fresh, locally farmed trout. Starting point for the gorge.">ήρεμη πηγαία λίμνη πνιγμένη στα πλατάνια, δίπλα στο κατάλυμα. Στις όχθες, ταβέρνες σερβίρουν φρέσκια πέστροφα τοπικής εκτροφής. Σημείο εκκίνησης για το φαράγγι.</span></li>
+          <li><strong data-en="Agios Nikolaos Gorge &amp; Rouvas Forest:">Φαράγγι Αγίου Νικολάου &amp; Δάσος Ρούβα:</strong> <span data-en="the area's finest trail. From the lake, ~20 min to Agios Nikolaos Monastery, then into the gorge (~2.5 km), ending at the magical holm-oak forest of Rouvas — one of the few in Greece — with the church of Agios Ioannis. ~5 km lake-to-forest; the loop hike takes ~4 hours. Best in spring and autumn.">το κορυφαίο μονοπάτι της περιοχής. Από τη λίμνη, ~20΄ ως τη Μονή Αγίου Νικολάου και από εκεί στο φαράγγι (~2,5 χλμ.), με κατάληξη το μαγευτικό πρινόδασος του Ρούβα — από τα λίγα δάση αριάς στην Ελλάδα — με την εκκλησία του Αγίου Ιωάννη. ~5 χλμ. λίμνη → δάσος· κυκλική πεζοπορία ~4 ώρες. Ιδανικά άνοιξη και φθινόπωρο.</span></li>
+          <li><strong data-en="Psiloritis – Nida Plateau – Ideon Cave:">Ψηλορείτης – Οροπέδιο Νίδας – Ιδαίον Άντρον:</strong> <span data-en="for mountain lovers: a drive up to the Nida plateau and the Ideon Cave, linked by myth to the upbringing of Zeus.">για τους λάτρεις του βουνού: ανάβαση προς το οροπέδιο της Νίδας και το Ιδαίον Άντρον, το σπήλαιο που η μυθολογία συνδέει με την ανατροφή του Δία.</span></li>
+        </ul>
+      </div>
+
+      <div class="guide-card reveal">
+        <h3><span class="gi">⛪</span> <span data-en="Monasteries &amp; Churches">Μοναστήρια &amp; Εκκλησίες</span></h3>
+        <ul>
+          <li><strong data-en="Byzantine churches">Βυζαντινές εκκλησίες</strong> <span data-en="in and around the village — Agia Kyriaki is just steps from the apartments.">εντός &amp; γύρω από το χωριό — η Αγία Κυριακή βρίσκεται πολύ κοντά στο κατάλυμα.</span></li>
+          <li><strong data-en="Agios Nikolaos Monastery:">Μονή Αγίου Νικολάου:</strong> <span data-en="just above the lake; follows the old (Julian) calendar.">λίγο πάνω από τη λίμνη· λειτουργεί με το παλαιό ημερολόγιο.</span></li>
+          <li><strong data-en="Vrontisi Monastery:">Μονή Βροντησίου:</strong> <span data-en="one of Crete's most historic monasteries (14th–15th c.), a great centre of the Cretan School, linked to the famous icon painter Michael Damaskinos. Note the Venetian fountain and the view over the Messara plain.">από τα ιστορικότερα μοναστήρια της Κρήτης (14ος–15ος αι.), σπουδαίο κέντρο της Κρητικής Σχολής, συνδεδεμένο με τον περίφημο αγιογράφο Μιχαήλ Δαμασκηνό. Ξεχωρίζουν η ενετική κρήνη και η θέα στον κάμπο της Μεσαράς.</span></li>
+          <li><strong data-en="Valsamonero Monastery:">Μονή Βαλσαμονέρου:</strong> <span data-en="near Vorizia, famed for its exceptional Byzantine frescoes.">κοντά στα Βορίζια, φημισμένη για τις εξαιρετικές βυζαντινές τοιχογραφίες της.</span></li>
+        </ul>
+      </div>
+
+      <div class="guide-card reveal">
+        <h3><span class="gi">🏛</span> <span data-en="Archaeological Sites (Messara)">Αρχαιολογικοί Χώροι (Μεσαρά)</span></h3>
+        <ul>
+          <li><strong data-en="Phaistos:">Φαιστός:</strong> <span data-en="Crete's second most important Minoan palace.">το δεύτερο σημαντικότερο μινωικό ανάκτορο της Κρήτης.</span></li>
+          <li><strong data-en="Agia Triada:">Αγία Τριάδα:</strong> <span data-en="Minoan settlement ~3 km west of Phaistos.">μινωικός οικισμός ~3 χλμ. δυτικά της Φαιστού.</span></li>
+          <li><strong data-en="Gortyna:">Γόρτυνα:</strong> <span data-en="great ancient city (~15 km from Phaistos), home of the famous Gortyn Law Code.">σπουδαία αρχαία πόλη (~15 χλμ. από τη Φαιστό), με τον περίφημο Νόμο της Γόρτυνας.</span></li>
+          <li><strong data-en="Kamares:">Καμάρες:</strong> <span data-en="the picturesque village and the Kamares Cave on Psiloritis, where the celebrated Minoan 'Kamares ware' pottery was found.">το γραφικό χωριό και το Σπήλαιο των Καμαρών στον Ψηλορείτη — εκεί βρέθηκε η ξακουστή μινωική «καμαραϊκή» κεραμική.</span></li>
+        </ul>
+      </div>
+
+      <div class="guide-card reveal">
+        <h3><span class="gi">🍽</span> <span data-en="Food &amp; Everyday Life">Γεύση &amp; Καθημερινότητα</span></h3>
+        <ul>
+          <li><span data-en="Creperie &amp; tavernas in the village.">Κρεπερί &amp; ταβέρνες στο χωριό.</span></li>
+          <li><span data-en="Fresh-trout tavernas by the lake, and a café near the gorge entrance.">Ταβέρνες με φρέσκια πέστροφα στη λίμνη και καφετέρια κοντά στην είσοδο του φαραγγιού.</span></li>
+          <li><strong data-en="Moires:">Μοίρες:</strong> <span data-en="~15 min by car — shops and a street market every Saturday.">~15 λεπτά με το αυτοκίνητο — ψώνια και λαϊκή αγορά κάθε Σάββατο.</span></li>
+        </ul>
+      </div>
+
+      <div class="guide-card guide-card-wide reveal">
+        <h3><span class="gi">🏖</span> <span data-en="Beaches (South Coast)">Παραλίες (Νότια Ακτή)</span></h3>
+        <ul>
+          <li><span data-en="Matala (the historic caves), Kommos and Kalamaki — an easy day trip to the Libyan Sea, ideally combined with Phaistos and Agia Triada.">Μάταλα (οι ιστορικές σπηλιές), Κομμός και Καλαμάκι — εύκολη ημερήσια εκδρομή στο Λιβυκό Πέλαγος, ιδανικά συνδυαστικά με Φαιστό και Αγία Τριάδα.</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="note center reveal" data-en="Distances and times are approximate.">Οι αποστάσεις και οι χρόνοι είναι κατά προσέγγιση.</p>
+
+    <div class="guide-map reveal">
+      <div id="areaMap"></div>
+      <div class="map-legend">
+        <span><i class="dot dot-stay"></i> <span data-en="Accommodation">Κατάλυμα</span></span>
+        <span><i class="dot dot-nature"></i> <span data-en="Nature">Φύση</span></span>
+        <span><i class="dot dot-monastery"></i> <span data-en="Monasteries">Μοναστήρια</span></span>
+        <span><i class="dot dot-arch"></i> <span data-en="Archaeology">Αρχαιολογία</span></span>
+        <span><i class="dot dot-beach"></i> <span data-en="Beaches">Παραλίες</span></span>
+        <span><i class="dot dot-food"></i> <span data-en="Food">Γεύση</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PRICING ===================== -->
+<section class="section" id="pricing">
+  <div class="container narrow">
+    <div class="center reveal">
+      <p class="eyebrow" data-en="Prices &amp; Policy">Τιμές &amp; Πολιτική</p>
+      <h2 data-en="Simple, clear pricing">Απλές, καθαρές τιμές</h2>
+    </div>
+    <div class="table-wrap reveal">
+      <table class="price-table">
+        <thead>
+          <tr>
+            <th data-en="Apartment">Κατάλυμα</th>
+            <th data-en="Capacity">Χωρητικότητα</th>
+            <th data-en="Base price (2 guests)">Βασική τιμή (2 άτομα)</th>
+            <th data-en="Per extra guest">Ανά επιπλέον άτομο</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Μαέρα</strong></td>
+            <td data-en="up to 4 guests">έως 4 άτομα</td>
+            <td data-en="€50 / night">50 € / διανυκτέρευση</td>
+            <td>+10 €</td>
+          </tr>
+          <tr>
+            <td><strong>Διόνυσος</strong></td>
+            <td data-en="up to 3 guests">έως 3 άτομα</td>
+            <td data-en="€60 / night">60 € / διανυκτέρευση</td>
+            <td>+10 €</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note center reveal" data-en="Examples (Maera): 3 guests → €60/night · 4 guests → €70/night.">Παραδείγματα (Μαέρα): 3 άτομα → 60 €/διανυκτέρευση · 4 άτομα → 70 €/διανυκτέρευση.</p>
+    <div class="policy-grid reveal">
+      <div class="policy">
+        <h4 data-en="Cleaning">Καθαρισμός</h4>
+        <p data-en="€15 one-off fee; cleaning is carried out before check-in.">15 € εφάπαξ· πραγματοποιείται πριν την είσοδο.</p>
+      </div>
+      <div class="policy">
+        <h4 data-en="Cancellation">Ακύρωση</h4>
+        <p data-en="Free cancellation up to 10 days before arrival (no charge).">Δωρεάν ακύρωση έως 10 ημέρες πριν την άφιξη (χωρίς χρέωση).</p>
+      </div>
+      <div class="policy">
+        <h4 data-en="Payment">Πληρωμή</h4>
+        <p data-en="Secure online payment via Stripe (activation pending). Alternatively, contact us directly.">Ασφαλής online πληρωμή μέσω Stripe (υπό ενεργοποίηση). Εναλλακτικά, επικοινωνήστε απευθείας μαζί μας.</p>
+      </div>
+      <div class="policy">
+        <h4 data-en="Shared courtyard">Κοινή αυλή</h4>
+        <p data-en="Both apartments share the courtyard and outdoor dining area.">Και τα δύο καταλύματα μοιράζονται την αυλή και την εξωτερική τραπεζαρία.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== BOOKING ===================== -->
+<section class="section section-alt" id="booking">
+  <div class="container narrow">
+    <div class="center reveal">
+      <p class="eyebrow" data-en="Booking">Κράτηση</p>
+      <h2 data-en="Check availability &amp; book">Δείτε διαθεσιμότητα &amp; κάντε κράτηση</h2>
+    </div>
+    <div class="booking-box reveal">
+      <!-- Step 1: unit -->
+      <div class="booking-step">
+        <p class="step-label"><span class="step-num">1</span> <span data-en="Choose apartment">Επιλέξτε κατάλυμα</span></p>
+        <div class="unit-picker">
+          <button class="unit-btn active" data-unit="maera">
+            <strong>Μαέρα</strong>
+            <span data-en="Ground floor · up to 4">Ισόγειο · έως 4 άτομα</span>
+          </button>
+          <button class="unit-btn" data-unit="dionysos">
+            <strong>Διόνυσος</strong>
+            <span data-en="1st floor · up to 3">1ος όροφος · έως 3 άτομα</span>
+          </button>
+        </div>
+      </div>
+      <!-- Step 2: dates -->
+      <div class="booking-step">
+        <p class="step-label"><span class="step-num">2</span> <span data-en="Choose dates">Επιλέξτε ημερομηνίες</span></p>
+        <div class="calendar" id="calendar">
+          <div class="cal-header">
+            <button id="calPrev" aria-label="Previous month">‹</button>
+            <span id="calTitle"></span>
+            <button id="calNext" aria-label="Next month">›</button>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <p class="cal-hint" data-en="Select check-in, then check-out. Greyed dates are unavailable.">Επιλέξτε άφιξη και μετά αναχώρηση. Οι γκρίζες ημερομηνίες είναι κατειλημμένες.</p>
+        </div>
+      </div>
+      <!-- Step 3: guests -->
+      <div class="booking-step">
+        <p class="step-label"><span class="step-num">3</span> <span data-en="Guests">Άτομα</span></p>
+        <div class="guests-picker">
+          <button id="guestsMinus" aria-label="Fewer">−</button>
+          <span id="guestsCount">2</span>
+          <button id="guestsPlus" aria-label="More">+</button>
+        </div>
+      </div>
+      <!-- Summary -->
+      <div class="booking-summary" id="bookingSummary">
+        <div class="sum-row"><span data-en="Apartment">Κατάλυμα</span><span id="sumUnit">Μαέρα</span></div>
+        <div class="sum-row"><span data-en="Dates">Ημερομηνίες</span><span id="sumDates">—</span></div>
+        <div class="sum-row"><span data-en="Nights × price">Διανυκτερεύσεις × τιμή</span><span id="sumNights">—</span></div>
+        <div class="sum-row"><span data-en="Cleaning (one-off)">Καθαρισμός (εφάπαξ)</span><span>15 €</span></div>
+        <div class="sum-row sum-total"><span data-en="Total">Σύνολο</span><span id="sumTotal">—</span></div>
+        <p class="sum-cancel" data-en="✓ Free cancellation up to 10 days before arrival">✓ Δωρεάν ακύρωση έως 10 ημέρες πριν την άφιξη</p>
+      </div>
+      <!-- Guest details + pay -->
+      <form class="booking-form" id="bookingForm">
+        <div class="form-row">
+          <input type="text" id="bkName" required placeholder="Ονοματεπώνυμο" data-en-placeholder="Full name">
+          <input type="email" id="bkEmail" required placeholder="Email" data-en-placeholder="Email">
+        </div>
+        <div class="form-row">
+          <input type="tel" id="bkPhone" placeholder="Τηλέφωνο" data-en-placeholder="Phone">
+        </div>
+        <button type="submit" class="btn btn-solid btn-wide" id="payBtn" data-en="Secure payment with Stripe">Ασφαλής πληρωμή με Stripe</button>
+        <p class="booking-msg" id="bookingMsg" hidden></p>
+      </form>
+      <div class="booking-fallback" id="bookingFallback" hidden>
+        <p data-en="Online payment is being activated. Send us your request and we will confirm your booking directly:">Η online πληρωμή ενεργοποιείται σύντομα. Στείλτε μας το αίτημά σας και θα επιβεβαιώσουμε την κράτηση απευθείας:</p>
+        <div class="fallback-actions">
+          <a class="btn btn-outline" id="fallbackMail" href="#" data-en="Email request">Αίτημα με email</a>
+          <a class="btn btn-outline" href="tel:+300000000000" data-en="Call us">Καλέστε μας</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== GALLERY ===================== -->
+<section class="section" id="gallery">
+  <div class="container">
+    <div class="center reveal">
+      <p class="eyebrow">Gallery</p>
+      <h2 data-en="A first look">Μια πρώτη ματιά</h2>
+    </div>
+    <div class="gallery-grid reveal">
+      <div class="ph ph-g1"><span data-en="Maera — bedroom">Μαέρα — κρεβατοκάμαρα</span></div>
+      <div class="ph ph-g2"><span data-en="Maera — living room">Μαέρα — σαλόνι</span></div>
+      <div class="ph ph-g3"><span data-en="Dionysos — bedroom">Διόνυσος — κρεβατοκάμαρα</span></div>
+      <div class="ph ph-g4"><span data-en="Dionysos — balcony">Διόνυσος — μπαλκόνι</span></div>
+      <div class="ph ph-g5"><span data-en="The courtyard">Η αυλή</span></div>
+      <div class="ph ph-g6"><span data-en="The lemon tree">Η λεμονιά</span></div>
+      <div class="ph ph-g7"><span data-en="The pomegranate tree">Η ροδιά</span></div>
+      <div class="ph ph-g8"><span data-en="Lake Zaros">Η λίμνη του Ζαρού</span></div>
+    </div>
+    <p class="note center reveal" data-en="(placeholders — real photos will replace these tiles)">(placeholders — εδώ θα μπουν οι πραγματικές φωτογραφίες)</p>
+  </div>
+</section>
+
+<!-- ===================== CONTACT ===================== -->
+<section class="section section-alt" id="contact">
+  <div class="container">
+    <div class="center reveal">
+      <p class="eyebrow" data-en="Contact">Επικοινωνία</p>
+      <h2 data-en="Find us in Zaros">Θα μας βρείτε στον Ζαρό</h2>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-info reveal">
+        <h3 data-en="Your hostess, Pepi">Η οικοδέσποινά σας, η Πέπη</h3>
+        <p data-en="Pepi personally welcomes every guest, shows you around the apartment, and is available throughout your stay for anything you may need.">
+          Η Πέπη υποδέχεται προσωπικά κάθε επισκέπτη, τον ξεναγεί στο διαμέρισμα και είναι διαθέσιμη σε όλη τη διαμονή για οτιδήποτε χρειαστεί.
+        </p>
+        <ul class="contact-list">
+          <li>📍 <span data-en="Zaros, Heraklion, Crete 700 02">Ζαρός, Ηράκλειο Κρήτης 700 02</span></li>
+          <li>📞 <a href="tel:+300000000000">+30 000 000 0000</a> <em class="tiny" data-en="(placeholder)">(placeholder)</em></li>
+          <li>✉️ <a href="mailto:info@example.com">info@example.com</a> <em class="tiny" data-en="(placeholder)">(placeholder)</em></li>
+        </ul>
+        <form class="contact-form" id="contactForm">
+          <input type="text" id="cfName" required placeholder="Ονοματεπώνυμο" data-en-placeholder="Full name">
+          <input type="email" id="cfEmail" required placeholder="Email" data-en-placeholder="Email">
+          <textarea id="cfMsg" rows="4" required placeholder="Το μήνυμά σας…" data-en-placeholder="Your message…"></textarea>
+          <button type="submit" class="btn btn-solid" data-en="Send message">Αποστολή μηνύματος</button>
+        </form>
+      </div>
+      <div class="contact-map reveal">
+        <iframe
+          title="Zaros map"
+          src="https://www.google.com/maps?q=Zaros,+Heraklion,+Crete&z=14&output=embed"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <p><strong>Μαέρα &amp; Διόνυσος</strong> · <span data-en="Zaros, Heraklion, Crete">Ζαρός, Ηράκλειο Κρήτης</span></p>
+    <p class="tiny" data-en="Stone-built hospitality at the foot of Psiloritis · Free cancellation up to 10 days before arrival">Πετρόκτιστη φιλοξενία στη ρίζα του Ψηλορείτη · Δωρεάν ακύρωση έως 10 ημέρες πριν την άφιξη</p>
+    <p class="tiny">© <span id="year"></span></p>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/main.js"></script>
+<script src="js/booking.js"></script>
+</body>
+</html>
