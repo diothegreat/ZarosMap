@@ -325,7 +325,7 @@
       </div>
       <div class="policy">
         <h4 data-en="Payment">Πληρωμή</h4>
-        <p data-en="Secure online payment via Stripe (activation pending). Alternatively, contact us directly.">Ασφαλής online πληρωμή μέσω Stripe (υπό ενεργοποίηση). Εναλλακτικά, επικοινωνήστε απευθείας μαζί μας.</p>
+        <p data-en="Reserve now with no charge — your card is charged securely online only 10 days before arrival. (Activation pending.)">Κράτηση τώρα χωρίς χρέωση — η κάρτα σας χρεώνεται με ασφάλεια online μόλις 10 ημέρες πριν την άφιξη. (Υπό ενεργοποίηση.)</p>
       </div>
       <div class="policy">
         <h4 data-en="Shared courtyard">Κοινή αυλή</h4>
@@ -386,7 +386,8 @@
         <div class="sum-row"><span data-en="Nights × price">Διανυκτερεύσεις × τιμή</span><span id="sumNights">—</span></div>
         <div class="sum-row"><span data-en="Cleaning (one-off)">Καθαρισμός (εφάπαξ)</span><span>15 €</span></div>
         <div class="sum-row sum-total"><span data-en="Total">Σύνολο</span><span id="sumTotal">—</span></div>
-        <p class="sum-cancel" data-en="✓ Free cancellation up to 10 days before arrival">✓ Δωρεάν ακύρωση έως 10 ημέρες πριν την άφιξη</p>
+        <p class="sum-cancel" data-en="✓ No charge today — your card is charged 10 days before arrival">✓ Καμία χρέωση σήμερα — η κάρτα χρεώνεται 10 ημέρες πριν την άφιξη</p>
+        <p class="sum-cancel" data-en="✓ Free cancellation any time before then">✓ Δωρεάν ακύρωση οποιαδήποτε στιγμή έως τότε</p>
       </div>
       <!-- Guest details + pay -->
       <form class="booking-form" id="bookingForm">
@@ -397,7 +398,7 @@
         <div class="form-row">
           <input type="tel" id="bkPhone" placeholder="Τηλέφωνο" data-en-placeholder="Phone">
         </div>
-        <button type="submit" class="btn btn-solid btn-wide" id="payBtn" data-en="Secure payment with Stripe">Ασφαλής πληρωμή με Stripe</button>
+        <button type="submit" class="btn btn-solid btn-wide" id="payBtn" data-en="Confirm reservation">Επιβεβαίωση κράτησης</button>
         <p class="booking-msg" id="bookingMsg" hidden></p>
       </form>
       <div class="booking-fallback" id="bookingFallback" hidden>
@@ -450,12 +451,10 @@
           <li>📞 <a href="tel:+300000000000">+30 000 000 0000</a> <em class="tiny" data-en="(placeholder)">(placeholder)</em></li>
           <li>✉️ <a href="mailto:info@example.com">info@example.com</a> <em class="tiny" data-en="(placeholder)">(placeholder)</em></li>
         </ul>
-        <form class="contact-form" id="contactForm">
-          <input type="text" id="cfName" required placeholder="Ονοματεπώνυμο" data-en-placeholder="Full name">
-          <input type="email" id="cfEmail" required placeholder="Email" data-en-placeholder="Email">
-          <textarea id="cfMsg" rows="4" required placeholder="Το μήνυμά σας…" data-en-placeholder="Your message…"></textarea>
-          <button type="submit" class="btn btn-solid" data-en="Send message">Αποστολή μηνύματος</button>
-        </form>
+        <div class="contact-cta">
+          <a href="#booking" class="btn btn-solid" data-en="Book your stay">Κάντε την κράτησή σας</a>
+          <a href="tel:+300000000000" class="btn btn-outline" data-en="Call us">Καλέστε μας</a>
+        </div>
       </div>
       <div class="contact-map reveal">
         <div class="map-locked">

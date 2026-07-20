@@ -655,8 +655,7 @@ img, video { max-width: 100%; display: block; }
 .contact-info h3 { color: var(--olive-deep); margin-bottom: 0.8rem; }
 .contact-list { list-style: none; margin: 1.4rem 0 2rem; }
 .contact-list li { padding: 0.4rem 0; }
-.contact-form { display: grid; gap: 1rem; }
-.contact-form button { justify-self: start; }
+.contact-cta { display: flex; gap: 1rem; flex-wrap: wrap; }
 .map-locked {
   border-radius: var(--radius);
   overflow: hidden;

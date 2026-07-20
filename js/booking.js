@@ -26,6 +26,8 @@
   var EXTRA_GUEST = 10;
   var CLEANING = 15;
 
+  var FREE_CANCEL_DAYS = 10;
+
   var state = {
     unit: "maera",
     guests: 2,
@@ -230,10 +232,17 @@
 
   fetch(API_BASE + "/api/config")
     .then(function (r) { if (!r.ok) throw new Error("no api"); return r.json(); })
-    .then(function (cfg) { state.stripeEnabled = !!cfg.stripeEnabled; })
+    .then(function (cfg) {
+      state.stripeEnabled = !!cfg.stripeEnabled;
+      if (cfg.freeCancelDays) FREE_CANCEL_DAYS = cfg.freeCancelDays;
+    })
     .catch(function () { state.stripeEnabled = false; })
     .then(function () {
-      if (!state.stripeEnabled) {
+      if (state.stripeEnabled) {
+        payBtn.textContent = t("Επιβεβαίωση κράτησης", "Confirm reservation");
+        payBtn.dataset.el = "Επιβεβαίωση κράτησης";
+        payBtn.dataset.en = "Confirm reservation";
+      } else {
         payBtn.textContent = t("Αίτημα κράτησης", "Request booking");
         payBtn.dataset.en = "Request booking";
         payBtn.dataset.el = "Αίτημα κράτησης";
@@ -270,7 +279,7 @@
 
     if (state.stripeEnabled) {
       payBtn.disabled = true;
-      fetch(API_BASE + "/api/checkout", {
+      fetch(API_BASE + "/api/reserve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -278,14 +287,14 @@
         .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
         .then(function (res) {
           if (res.ok && res.j.url) {
-            window.location.href = res.j.url; // Stripe Checkout
+            window.location.href = res.j.url; // Stripe setup checkout (saves card, no charge)
           } else {
-            throw new Error(res.j.error || "checkout failed");
+            throw new Error(res.j.error || "reservation failed");
           }
         })
         .catch(function (err) {
           payBtn.disabled = false;
-          showMsg(t("Η πληρωμή δεν ολοκληρώθηκε: ", "Payment could not start: ") + err.message, "error");
+          showMsg(t("Η κράτηση δεν ολοκληρώθηκε: ", "Reservation could not start: ") + err.message, "error");
         });
     } else {
       // Fallback: pre-filled email request until Stripe is activated.
@@ -308,10 +317,11 @@
   /* ---------- Payment result (return from Stripe) ---------- */
   var params = new URLSearchParams(window.location.search);
   if (params.get("booking") === "success") {
-    showMsg(t("Η πληρωμή ολοκληρώθηκε! Θα λάβετε email επιβεβαίωσης.", "Payment complete! You will receive a confirmation email."), "ok");
+    showMsg(t("Η κράτησή σας επιβεβαιώθηκε! Δεν χρεωθήκατε τώρα — η κάρτα σας θα χρεωθεί " + FREE_CANCEL_DAYS + " ημέρες πριν την άφιξη. Θα λάβετε email επιβεβαίωσης.",
+             "Your reservation is confirmed! You were not charged now — your card will be charged " + FREE_CANCEL_DAYS + " days before arrival. A confirmation email is on its way."), "ok");
     document.getElementById("booking").scrollIntoView();
   } else if (params.get("booking") === "cancelled") {
-    showMsg(t("Η πληρωμή ακυρώθηκε. Μπορείτε να δοκιμάσετε ξανά.", "Payment was cancelled. You can try again."), "error");
+    showMsg(t("Η κράτηση ακυρώθηκε. Μπορείτε να δοκιμάσετε ξανά.", "The reservation was cancelled. You can try again."), "error");
     document.getElementById("booking").scrollIntoView();
   }
 

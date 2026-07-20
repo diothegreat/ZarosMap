@@ -87,21 +87,6 @@
     });
   }
 
-  /* ---------- Contact form (mailto fallback) ---------- */
-  var contactForm = document.getElementById("contactForm");
-  if (contactForm) {
-    contactForm.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var name = document.getElementById("cfName").value;
-      var email = document.getElementById("cfEmail").value;
-      var msg = document.getElementById("cfMsg").value;
-      var subject = lang === "en" ? "Enquiry — Maera & Dionysos, Zaros" : "Ερώτημα — Μαέρα & Διόνυσος, Ζαρός";
-      var body = msg + "\n\n— " + name + " (" + email + ")";
-      window.location.href = "mailto:info@example.com?subject=" +
-        encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
-    });
-  }
-
   /* ---------- Footer year ---------- */
   document.getElementById("year").textContent = new Date().getFullYear();
 
