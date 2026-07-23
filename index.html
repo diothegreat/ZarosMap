@@ -337,77 +337,105 @@
 
 <!-- ===================== BOOKING ===================== -->
 <section class="section section-alt" id="booking">
-  <div class="container narrow">
+  <div class="container">
     <div class="center reveal">
       <p class="eyebrow" data-en="Booking">Κράτηση</p>
       <h2 data-en="Check availability &amp; book">Δείτε διαθεσιμότητα &amp; κάντε κράτηση</h2>
+      <p class="lead narrow-lead" data-en="Real-time availability · instant confirmation · no charge today.">Διαθεσιμότητα σε πραγματικό χρόνο · άμεση επιβεβαίωση · καμία χρέωση σήμερα.</p>
     </div>
-    <div class="booking-box reveal">
-      <!-- Step 1: unit -->
-      <div class="booking-step">
-        <p class="step-label"><span class="step-num">1</span> <span data-en="Choose apartment">Επιλέξτε κατάλυμα</span></p>
-        <div class="unit-picker">
-          <button class="unit-btn active" data-unit="maera">
-            <strong>Μαέρα</strong>
-            <span data-en="Ground floor · up to 4">Ισόγειο · έως 4 άτομα</span>
+
+    <div class="booking-widget reveal">
+      <!-- ---------- Left: unit tabs + dual calendar ---------- -->
+      <div class="bw-main">
+        <div class="unit-tabs" role="tablist">
+          <button class="unit-tab active" data-unit="maera" role="tab">
+            <span class="ut-name">Μαέρα</span>
+            <span class="ut-meta" data-en="Ground floor · up to 4">Ισόγειο · έως 4</span>
+            <span class="ut-price"><span data-en="from">από</span> <strong>50&nbsp;€</strong> <span data-en="/night">/νύχτα</span></span>
           </button>
-          <button class="unit-btn" data-unit="dionysos">
-            <strong>Διόνυσος</strong>
-            <span data-en="1st floor · up to 3">1ος όροφος · έως 3 άτομα</span>
+          <button class="unit-tab" data-unit="dionysos" role="tab">
+            <span class="ut-name">Διόνυσος</span>
+            <span class="ut-meta" data-en="First floor · up to 3">1ος όροφος · έως 3</span>
+            <span class="ut-price"><span data-en="from">από</span> <strong>60&nbsp;€</strong> <span data-en="/night">/νύχτα</span></span>
           </button>
         </div>
-      </div>
-      <!-- Step 2: dates -->
-      <div class="booking-step">
-        <p class="step-label"><span class="step-num">2</span> <span data-en="Choose dates">Επιλέξτε ημερομηνίες</span></p>
-        <div class="calendar" id="calendar">
-          <div class="cal-header">
-            <button id="calPrev" aria-label="Previous month">‹</button>
-            <span id="calTitle"></span>
-            <button id="calNext" aria-label="Next month">›</button>
+
+        <div class="calendar-pro">
+          <div class="cp-head">
+            <button id="calPrev" class="cp-nav" aria-label="Previous month">‹</button>
+            <div class="cp-legend">
+              <span><i class="lg lg-free"></i> <span data-en="Available">Διαθέσιμο</span></span>
+              <span><i class="lg lg-sel"></i> <span data-en="Selected">Επιλογή</span></span>
+              <span><i class="lg lg-booked"></i> <span data-en="Booked">Κλεισμένο</span></span>
+            </div>
+            <button id="calNext" class="cp-nav" aria-label="Next month">›</button>
           </div>
-          <div class="cal-grid" id="calGrid"></div>
-          <p class="cal-hint" data-en="Select check-in, then check-out. Greyed dates are unavailable.">Επιλέξτε άφιξη και μετά αναχώρηση. Οι γκρίζες ημερομηνίες είναι κατειλημμένες.</p>
+          <div class="cp-months" id="calMonths"></div>
+          <p class="cp-hint" id="calHint" data-en="Select your check-in date.">Επιλέξτε ημερομηνία άφιξης.</p>
         </div>
       </div>
-      <!-- Step 3: guests -->
-      <div class="booking-step">
-        <p class="step-label"><span class="step-num">3</span> <span data-en="Guests">Άτομα</span></p>
-        <div class="guests-picker">
-          <button id="guestsMinus" aria-label="Fewer">−</button>
-          <span id="guestsCount">2</span>
-          <button id="guestsPlus" aria-label="More">+</button>
+
+      <!-- ---------- Right: reservation card ---------- -->
+      <aside class="bw-aside">
+        <div class="reserve-card">
+          <div class="rc-top">
+            <div class="rc-price"><strong id="rcNightly">50&nbsp;€</strong> <span data-en="/ night">/ νύχτα</span></div>
+            <div class="rc-rating" title="Google">★★★★★ <span>4,5</span></div>
+          </div>
+
+          <div class="rc-fields">
+            <div class="rc-dates">
+              <div class="rc-field" id="rcFieldIn">
+                <label data-en="Check-in">Άφιξη</label>
+                <span id="rcIn" data-en="Add date">Επιλογή</span>
+              </div>
+              <div class="rc-field" id="rcFieldOut">
+                <label data-en="Check-out">Αναχώρηση</label>
+                <span id="rcOut" data-en="Add date">Επιλογή</span>
+              </div>
+            </div>
+            <div class="rc-field rc-guestfield">
+              <label data-en="Guests">Άτομα</label>
+              <div class="guests-picker">
+                <button type="button" id="guestsMinus" aria-label="Fewer">−</button>
+                <span id="guestsCount">2</span>
+                <button type="button" id="guestsPlus" aria-label="More">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="rc-breakdown" id="rcBreakdown" hidden>
+            <div class="rc-row"><span id="rcNightsLabel">—</span><span id="rcNightsVal">—</span></div>
+            <div class="rc-row"><span data-en="Cleaning fee (one-off)">Καθαρισμός (εφάπαξ)</span><span>15&nbsp;€</span></div>
+            <div class="rc-row rc-total"><span data-en="Total">Σύνολο</span><span id="sumTotal">—</span></div>
+          </div>
+
+          <form class="rc-form" id="bookingForm">
+            <div class="rc-guestdetails" id="guestDetails" hidden>
+              <input type="text" id="bkName" placeholder="Ονοματεπώνυμο" data-en-placeholder="Full name">
+              <input type="email" id="bkEmail" placeholder="Email" data-en-placeholder="Email">
+              <input type="tel" id="bkPhone" placeholder="Τηλέφωνο (προαιρετικό)" data-en-placeholder="Phone (optional)">
+            </div>
+            <button type="submit" class="btn btn-solid btn-wide" id="payBtn" data-en="Confirm reservation">Επιβεβαίωση κράτησης</button>
+            <p class="rc-reassure" id="rcReassure" data-en="You won't be charged yet">Δεν θα χρεωθείτε ακόμη</p>
+            <p class="booking-msg" id="bookingMsg" hidden></p>
+          </form>
+
+          <ul class="rc-trust">
+            <li data-en="No charge today — card charged 10 days before arrival">Καμία χρέωση σήμερα — χρέωση 10 ημέρες πριν την άφιξη</li>
+            <li data-en="Free cancellation until then">Δωρεάν ακύρωση έως τότε</li>
+            <li data-en="Instant confirmation by email">Άμεση επιβεβαίωση με email</li>
+          </ul>
+
+          <div class="booking-fallback" id="bookingFallback" hidden>
+            <p data-en="Online payment is being activated. Send your request and we'll confirm directly:">Η online πληρωμή ενεργοποιείται σύντομα. Στείλτε το αίτημά σας και θα επιβεβαιώσουμε απευθείας:</p>
+            <div class="fallback-actions">
+              <a class="btn btn-outline btn-small" id="fallbackMail" href="#" data-en="Email request">Αίτημα με email</a>
+              <a class="btn btn-outline btn-small" href="tel:+300000000000" data-en="Call us">Καλέστε μας</a>
+            </div>
+          </div>
         </div>
-      </div>
-      <!-- Summary -->
-      <div class="booking-summary" id="bookingSummary">
-        <div class="sum-row"><span data-en="Apartment">Κατάλυμα</span><span id="sumUnit">Μαέρα</span></div>
-        <div class="sum-row"><span data-en="Dates">Ημερομηνίες</span><span id="sumDates">—</span></div>
-        <div class="sum-row"><span data-en="Nights × price">Διανυκτερεύσεις × τιμή</span><span id="sumNights">—</span></div>
-        <div class="sum-row"><span data-en="Cleaning (one-off)">Καθαρισμός (εφάπαξ)</span><span>15 €</span></div>
-        <div class="sum-row sum-total"><span data-en="Total">Σύνολο</span><span id="sumTotal">—</span></div>
-        <p class="sum-cancel" data-en="✓ No charge today — your card is charged 10 days before arrival">✓ Καμία χρέωση σήμερα — η κάρτα χρεώνεται 10 ημέρες πριν την άφιξη</p>
-        <p class="sum-cancel" data-en="✓ Free cancellation any time before then">✓ Δωρεάν ακύρωση οποιαδήποτε στιγμή έως τότε</p>
-      </div>
-      <!-- Guest details + pay -->
-      <form class="booking-form" id="bookingForm">
-        <div class="form-row">
-          <input type="text" id="bkName" required placeholder="Ονοματεπώνυμο" data-en-placeholder="Full name">
-          <input type="email" id="bkEmail" required placeholder="Email" data-en-placeholder="Email">
-        </div>
-        <div class="form-row">
-          <input type="tel" id="bkPhone" placeholder="Τηλέφωνο" data-en-placeholder="Phone">
-        </div>
-        <button type="submit" class="btn btn-solid btn-wide" id="payBtn" data-en="Confirm reservation">Επιβεβαίωση κράτησης</button>
-        <p class="booking-msg" id="bookingMsg" hidden></p>
-      </form>
-      <div class="booking-fallback" id="bookingFallback" hidden>
-        <p data-en="Online payment is being activated. Send us your request and we will confirm your booking directly:">Η online πληρωμή ενεργοποιείται σύντομα. Στείλτε μας το αίτημά σας και θα επιβεβαιώσουμε την κράτηση απευθείας:</p>
-        <div class="fallback-actions">
-          <a class="btn btn-outline" id="fallbackMail" href="#" data-en="Email request">Αίτημα με email</a>
-          <a class="btn btn-outline" href="tel:+300000000000" data-en="Call us">Καλέστε μας</a>
-        </div>
-      </div>
+      </aside>
     </div>
   </div>
 </section>
