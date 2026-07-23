@@ -29,6 +29,8 @@ fi
 echo "    node $(node -v)"
 
 echo "==> [3/6] Fetching site code ($BRANCH)"
+# The app dir is owned by www-data (see below); allow git to run on it as root.
+git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
 if [ -d "$APP_DIR/.git" ]; then
   git -C "$APP_DIR" fetch origin "$BRANCH"
   git -C "$APP_DIR" checkout "$BRANCH"
