@@ -40,6 +40,7 @@ SESSION_FILE = BASE_DIR / "session.json"
 # --------------------------------------------------------------------------- #
 LOCK_JS = r"""
 (() => {
+  window.__mmLocked = true;
   if (document.getElementById('mm-shield')) return true;
 
   // Το video που ΠΑΙΖΕΙ πραγματικά (μπορεί να υπάρχουν κι άλλα, κρυφά/άδεια, στη σελίδα).
@@ -121,7 +122,8 @@ LOCK_JS = r"""
   window.__mmSync = sync;
   window.__mmSetMuted = m => { setMuted(m); sync(); const v = pickVideo(); return v ? v.muted : null; };
   window.__mmSetVolume = x => { setVolume(x / 100); sync(); const v = pickVideo(); return v ? Math.round(v.volume * 100) : null; };
-  setInterval(sync, 500);
+  clearInterval(window.__mmInterval);
+  window.__mmInterval = setInterval(sync, 500);
   sync();
 
   const toggleMute = () => { const v = pickVideo(); if (v) { setMuted(!v.muted); sync(); } };
@@ -146,15 +148,20 @@ LOCK_JS = r"""
 
   // Μπλοκάρισμα όλων των υπόλοιπων αλληλεπιδράσεων
   const block = e => {
+    if (!window.__mmLocked) return;
     if (e.target && e.target.closest && e.target.closest('#mm-bar')) return;
     e.preventDefault(); e.stopImmediatePropagation();
   };
-  ['click','mousedown','mouseup','pointerdown','pointerup','auxclick',
+  // Οι listeners μπαίνουν μία φορά ανά σελίδα (το κλείδωμα/ξεκλείδωμα ελέγχεται από __mmLocked)
+  const firstInstall = !window.__mmListeners;
+  window.__mmListeners = true;
+  if (firstInstall) ['click','mousedown','mouseup','pointerdown','pointerup','auxclick',
    'contextmenu','wheel','touchstart','touchend','dragstart','selectstart']
     .forEach(t => window.addEventListener(t, block, { capture: true, passive: false }));
 
   // Πληκτρολόγιο: επιτρέπονται μόνο M (mute), F (fullscreen), ↑/↓ (ένταση), Esc
   const keys = e => {
+    if (!window.__mmLocked) return;
     const k = e.key;
     if (k === 'Escape' || k === 'F11') return;           // έξοδος από πλήρη οθόνη
     e.preventDefault(); e.stopImmediatePropagation();
@@ -165,9 +172,21 @@ LOCK_JS = r"""
     else if (v && k === 'ArrowUp')   { setVolume(Math.min(1, v.volume + .05)); sync(); }
     else if (v && k === 'ArrowDown') { setVolume(Math.max(0, v.volume - .05)); sync(); }
   };
-  ['keydown','keyup','keypress'].forEach(t =>
+  if (firstInstall) ['keydown','keyup','keypress'].forEach(t =>
     window.addEventListener(t, keys, { capture: true }));
 
+  return true;
+})()
+"""
+
+# Ξεκλείδωμα (για αλλαγή καναλιού χωρίς να κλείσει το Chrome)
+UNLOCK_JS = r"""
+(() => {
+  window.__mmLocked = false;
+  clearInterval(window.__mmInterval);
+  document.getElementById('mm-shield')?.remove();
+  document.getElementById('mm-style')?.remove();
+  document.querySelectorAll('video.mm-video').forEach(v => v.classList.remove('mm-video'));
   return true;
 })()
 """
@@ -654,7 +673,16 @@ class MagentaPlayer:
         tile_sel = self._tile_selectors(ch)
         self._seen_labels = {}
 
-        self._set("starting", f"Άνοιγμα Chrome για {ch['name']}…", channel=channel_id)
+        browser_open = self._page is not None and not self._page.is_closed()
+        if browser_open:
+            # Αλλαγή καναλιού: το Chrome μένει ανοιχτό (και συνδεδεμένο)
+            self._set("loading", f"Αλλαγή σε {ch['name']}…", channel=channel_id)
+            try:
+                self._page.evaluate(UNLOCK_JS)
+            except PWError:
+                pass
+        else:
+            self._set("starting", f"Άνοιγμα Chrome για {ch['name']}…", channel=channel_id)
         page = self._ensure_browser()
         if not self._hide:
             page.bring_to_front()
@@ -844,6 +872,8 @@ class MagentaPlayer:
             cdp.detach()
 
     def _do_stop(self, _arg: Any) -> None:
+        if self._ctx is not None and self._page is not None and not self._page.is_closed():
+            self._save_session()
         self._close_browser()
         self._current = None
         self._channel_url = None
@@ -864,6 +894,10 @@ class MagentaPlayer:
             self._set("idle", "Το παράθυρο έκλεισε", channel=None)
             return
         try:
+            # Ανανέωση των αποθηκευμένων cookies κάθε λεπτό (το Magenta τα ανανεώνει)
+            if time.time() - getattr(self, "_last_save", 0) > 60:
+                self._last_save = time.time()
+                self._save_session()
             if self._channel_url and page.url != self._channel_url:
                 self._set("loading", "Επιστροφή στο κανάλι…")
                 page.goto(self._channel_url, wait_until="domcontentloaded")

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magenta Monitor – Αλλαγή κωδικού</title>
+<style>
+  :root { --mg:#e20074; --bg:#111; --card:#1c1c1c; --txt:#eee; --mut:#999; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center;
+         background:var(--bg); color:var(--txt); font:16px/1.4 system-ui, sans-serif; }
+  .card { width:min(400px, 92vw); background:var(--card); border-radius:16px;
+          padding:28px; box-shadow:0 10px 40px rgba(0,0,0,.5); }
+  h1 { margin:0 0 18px; font-size:22px; } h1 span { color:var(--mg); }
+  label { display:block; margin:12px 0 6px; color:var(--mut); font-size:14px; }
+  input { width:100%; padding:12px; border-radius:10px; border:0; font-size:16px;
+          background:#2a2a2a; color:var(--txt); }
+  button { width:100%; margin-top:18px; padding:12px; border-radius:10px; border:0; font-size:16px;
+           background:var(--mg); color:#fff; cursor:pointer; font-weight:600; }
+  .err { margin-top:14px; padding:10px; border-radius:10px; background:#3a1d1d; color:#ff8a8a; font-size:14px; }
+  .ok  { margin-top:14px; padding:10px; border-radius:10px; background:#1d3a24; color:#8aff9e; font-size:14px; }
+  .warn{ margin-bottom:12px; padding:10px; border-radius:10px; background:#3a331d; color:#ffd479; font-size:14px; }
+  a { color:var(--mut); font-size:14px; }
+</style>
+</head><body>
+<form class="card" method="post">
+  <h1>Αλλαγή στοιχείων εισόδου</h1>
+  {% if default_pwd %}<div class="warn">Χρησιμοποιείς ακόμα τον αρχικό κωδικό <b>admin</b>. Άλλαξέ τον.</div>{% endif %}
+  <label for="c">Τρέχων κωδικός</label>
+  <input id="c" name="current" type="password" autocomplete="current-password" required>
+  <label for="u">Όνομα χρήστη</label>
+  <input id="u" name="username" value="{{ username }}" autocomplete="username">
+  <label for="n">Νέος κωδικός</label>
+  <input id="n" name="new" type="password" autocomplete="new-password" required>
+  <label for="r">Νέος κωδικός (ξανά)</label>
+  <input id="r" name="confirm" type="password" autocomplete="new-password" required>
+  <button type="submit">Αποθήκευση</button>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  {% if msg %}<div class="ok">{{ msg }}</div>{% endif %}
+  <p style="margin:18px 0 0"><a href="/">← Πίσω</a></p>
+</form>
+</body></html>

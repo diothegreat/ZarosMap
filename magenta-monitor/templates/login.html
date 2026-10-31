@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="el"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magenta Monitor – Σύνδεση</title>
+<style>
+  :root { --mg:#e20074; --bg:#111; --card:#1c1c1c; --txt:#eee; --mut:#999; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center;
+         background:var(--bg); color:var(--txt); font:16px/1.4 system-ui, sans-serif; }
+  .card { width:min(400px, 92vw); background:var(--card); border-radius:16px;
+          padding:28px; box-shadow:0 10px 40px rgba(0,0,0,.5); }
+  h1 { margin:0 0 18px; font-size:22px; } h1 span { color:var(--mg); }
+  label { display:block; margin:12px 0 6px; color:var(--mut); font-size:14px; }
+  input { width:100%; padding:12px; border-radius:10px; border:0; font-size:16px;
+          background:#2a2a2a; color:var(--txt); }
+  button { width:100%; margin-top:18px; padding:12px; border-radius:10px; border:0; font-size:16px;
+           background:var(--mg); color:#fff; cursor:pointer; font-weight:600; }
+  .err { margin-top:14px; padding:10px; border-radius:10px; background:#3a1d1d; color:#ff8a8a; font-size:14px; }
+  .ok  { margin-top:14px; padding:10px; border-radius:10px; background:#1d3a24; color:#8aff9e; font-size:14px; }
+  .warn{ margin-bottom:12px; padding:10px; border-radius:10px; background:#3a331d; color:#ffd479; font-size:14px; }
+  a { color:var(--mut); font-size:14px; }
+</style>
+</head><body>
+<form class="card" method="post">
+  <h1><span>Magenta</span> Monitor</h1>
+  <label for="u">Όνομα χρήστη</label>
+  <input id="u" name="username" autocomplete="username" autofocus required>
+  <label for="p">Κωδικός</label>
+  <input id="p" name="password" type="password" autocomplete="current-password" required>
+  <button type="submit">Σύνδεση</button>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+</form>
+</body></html>

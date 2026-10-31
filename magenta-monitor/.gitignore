@@ -5,3 +5,4 @@ __pycache__/
 *.log
 debug/
 session.json
+web_auth.json

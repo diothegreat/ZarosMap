@@ -27,6 +27,10 @@
   #status.error   { border-left:4px solid #e74c3c; }
   #status.loading, #status.login, #status.starting { border-left:4px solid #f1c40f; }
   #controls { display:none; }
+  .warn { margin:0 0 16px; padding:10px; border-radius:10px; background:#3a331d; color:#ffd479; font-size:14px; }
+  .warn a { color:#ffd479; }
+  .links { margin:16px 0 0; text-align:center; font-size:13px; color:var(--mut); }
+  .links a { color:var(--mut); }
   #controls.on { display:block; }
 </style>
 </head>
@@ -34,6 +38,7 @@
 <div class="card">
   <h1><span>Magenta</span> Monitor</h1>
   <p class="sub">Διάλεξε κανάλι. Θα ανοίξει παράθυρο Chrome μόνο για παρακολούθηση.</p>
+  {% if default_pwd %}<p class="warn">Χρησιμοποιείς τον αρχικό κωδικό admin. <a href="/account">Άλλαξέ τον</a>.</p>{% endif %}
 
   <label for="channel">Κανάλι</label>
   <select id="channel">
@@ -51,6 +56,7 @@
   </div>
 
   <div id="status">Σύνδεση με server…</div>
+  <p class="links"><a href="/account">Αλλαγή κωδικού</a> · <a href="/logout">Αποσύνδεση</a></p>
 </div>
 
 <script>
@@ -59,9 +65,10 @@ const api = (path, body) => fetch(path, {
   method: body === undefined ? 'GET' : 'POST',
   headers: {'Content-Type': 'application/json'},
   body: body === undefined ? undefined : JSON.stringify(body),
-}).then(r => r.json());
+}).then(r => { if (r.status === 401) { location.href = '/login'; throw new Error('auth'); } return r.json(); });
 
 let muted = false;
+let lastChannel = null;
 
 $('go').onclick = async () => {
   $('go').disabled = true;
@@ -86,13 +93,13 @@ async function poll() {
     $('status').textContent = s.message;
     $('status').className = s.status;
     const busy = ['starting','loading','login'].includes(s.status);
+    const playing = s.status === 'playing';
     $('go').disabled = busy;
-    // Μόλις ξεκινήσει η προβολή, το κανάλι "κλειδώνει" – για αλλαγή: Τερματισμός.
-    const active = busy || s.status === 'playing';
-    $('channel').disabled = active;
-    $('go').style.display = active ? 'none' : '';
-    $('controls').classList.toggle('on', s.status === 'playing');
-    if (s.channel) $('channel').value = s.channel;
+    $('channel').disabled = busy;
+    $('go').textContent = playing ? '⇄ Αλλαγή καναλιού' : '▶ Σύνδεση & Προβολή';
+    $('controls').classList.toggle('on', playing);
+    // Κράτα την επιλογή του χρήστη όσο παίζει· συγχρόνισε μόνο όταν αλλάζει το κανάλι
+    if (s.channel && s.channel !== lastChannel) { $('channel').value = s.channel; lastChannel = s.channel; }
   } catch { $('status').textContent = 'Ο server δεν απαντά'; $('status').className = 'error'; }
   setTimeout(poll, 1000);
 }

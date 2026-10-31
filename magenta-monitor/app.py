@@ -15,7 +15,10 @@ import time
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request
+import secrets
+
+from flask import Flask, jsonify, redirect, render_template, request, session, url_for
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from player import MagentaPlayer, PlayerError
 
@@ -41,13 +44,96 @@ if not USER or not PASS:
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("MAGENTA_PORT", "5000"))
 
+# ------------------------------------------------------------------ auth ----
+# Στοιχεία εισόδου στη σελίδα του server. Αρχικά admin / admin· αλλάζουν από τη
+# σελίδα "Αλλαγή κωδικού" και σώζονται (κρυπτογραφημένα) στο web_auth.json.
+AUTH_FILE = BASE_DIR / "web_auth.json"
+
+
+def load_auth() -> dict:
+    if AUTH_FILE.exists():
+        data = json.loads(AUTH_FILE.read_text(encoding="utf-8"))
+    else:
+        data = {"username": "admin", "password_hash": generate_password_hash("admin")}
+    if not data.get("secret_key"):
+        data["secret_key"] = secrets.token_hex(32)
+        save_auth(data)
+    return data
+
+
+def save_auth(data: dict) -> None:
+    AUTH_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+AUTH = load_auth()
+
 app = Flask(__name__)
+app.secret_key = AUTH["secret_key"]
+
+# Χωρίς login: η σελίδα login και ό,τι χρειάζεται το Node-RED.
+PUBLIC_ENDPOINTS = {"login", "static", "health", "shutdown"}
+
+
+@app.before_request
+def require_login():
+    if request.endpoint in PUBLIC_ENDPOINTS or session.get("user"):
+        return None
+    if request.path.startswith("/api/"):
+        return jsonify(ok=False, error="Απαιτείται σύνδεση"), 401
+    return redirect(url_for("login", next=request.path))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        user = request.form.get("username", "")
+        pwd = request.form.get("password", "")
+        if user == AUTH["username"] and check_password_hash(AUTH["password_hash"], pwd):
+            session.clear()
+            session["user"] = user
+            session.permanent = True
+            nxt = request.args.get("next", "/")
+            return redirect(nxt if nxt.startswith("/") and not nxt.startswith("//") else "/")
+        error = "Λάθος όνομα χρήστη ή κωδικός"
+    return render_template("login.html", error=error)
+
+
+@app.get("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+@app.route("/account", methods=["GET", "POST"])
+def account():
+    msg, error = None, None
+    if request.method == "POST":
+        cur = request.form.get("current", "")
+        new_user = request.form.get("username", "").strip() or AUTH["username"]
+        new_pwd = request.form.get("new", "")
+        if not check_password_hash(AUTH["password_hash"], cur):
+            error = "Ο τρέχων κωδικός είναι λάθος"
+        elif len(new_pwd) < 4:
+            error = "Ο νέος κωδικός πρέπει να έχει τουλάχιστον 4 χαρακτήρες"
+        elif new_pwd != request.form.get("confirm", ""):
+            error = "Οι δύο νέοι κωδικοί δεν ταιριάζουν"
+        else:
+            AUTH["username"] = new_user
+            AUTH["password_hash"] = generate_password_hash(new_pwd)
+            save_auth(AUTH)
+            session["user"] = new_user
+            msg = "Τα στοιχεία άλλαξαν"
+    return render_template("account.html", username=AUTH["username"], msg=msg, error=error,
+                           default_pwd=check_password_hash(AUTH["password_hash"], "admin"))
+
 player = MagentaPlayer(CONFIG, USER, PASS)
 
 
 @app.get("/")
 def index():
-    return render_template("index.html", channels=CONFIG["channels"])
+    return render_template("index.html", channels=CONFIG["channels"],
+                           default_pwd=check_password_hash(AUTH["password_hash"], "admin"))
 
 
 @app.get("/api/health")
