@@ -1,45 +1,132 @@
 {
-  "_comment": "Αντέγραψε σε config.json. Για κάθε κανάλι βάλε το URL που βλέπεις στη γραμμή διευθύνσεων όταν το ανοίγεις μία φορά χειροκίνητα στο Magenta TV web.",
-
-  "start_url": "https://web.magentatv.de/",
+  "_comment": "Αντέγραψε σε config.json. Κάθε κανάλι βρίσκεται με το όνομά του ('match') στη σελίδα καναλιών και πατιέται αυτόματα. Αν το κανάλι έχει δικό του URL (το βλέπεις στη γραμμή διευθύνσεων όταν παίζει), μπορείς να το βάλεις στο 'url' και θα ανοίγει απευθείας. Αν το όνομα δεν ταιριάζει, βάλε 'selector'.",
+  "start_url": "https://streaming.magentatv.gr/",
+  "channels_url": "https://streaming.magentatv.gr/#!/channels",
   "chrome_channel": "chrome",
-  "window_size": [1280, 720],
-
-  "channels": [
-    { "id": "novasports1",      "name": "Novasports 1",      "url": "https://web.magentatv.de/REPLACE-ME/novasports1" },
-    { "id": "novasports2",      "name": "Novasports 2",      "url": "https://web.magentatv.de/REPLACE-ME/novasports2" },
-    { "id": "novasports3",      "name": "Novasports 3",      "url": "https://web.magentatv.de/REPLACE-ME/novasports3" },
-    { "id": "novasports4",      "name": "Novasports 4",      "url": "https://web.magentatv.de/REPLACE-ME/novasports4" },
-    { "id": "novasports5",      "name": "Novasports 5",      "url": "https://web.magentatv.de/REPLACE-ME/novasports5" },
-    { "id": "novasports_prime", "name": "Novasports Prime",  "url": "https://web.magentatv.de/REPLACE-ME/novasportsprime" },
-    { "id": "novasports_start", "name": "Novasports Start",  "url": "https://web.magentatv.de/REPLACE-ME/novasportsstart" },
-    { "id": "magenta_sport1",   "name": "MagentaSport 1",    "url": "https://web.magentatv.de/REPLACE-ME/magentasport1" },
-    { "id": "magenta_sport2",   "name": "MagentaSport 2",    "url": "https://web.magentatv.de/REPLACE-ME/magentasport2" },
-    { "id": "magenta_sport3",   "name": "MagentaSport 3",    "url": "https://web.magentatv.de/REPLACE-ME/magentasport3" }
+  "window_size": [
+    1280,
+    720
   ],
-
+  "channels": [
+    {
+      "id": "novasports1",
+      "name": "Novasports 1",
+      "match": "Novasports 1",
+      "url": ""
+    },
+    {
+      "id": "novasports2",
+      "name": "Novasports 2",
+      "match": "Novasports 2",
+      "url": ""
+    },
+    {
+      "id": "novasports3",
+      "name": "Novasports 3",
+      "match": "Novasports 3",
+      "url": ""
+    },
+    {
+      "id": "novasports4",
+      "name": "Novasports 4",
+      "match": "Novasports 4",
+      "url": ""
+    },
+    {
+      "id": "novasports5",
+      "name": "Novasports 5",
+      "match": "Novasports 5",
+      "url": ""
+    },
+    {
+      "id": "novasports6",
+      "name": "Novasports 6",
+      "match": "Novasports 6",
+      "url": ""
+    },
+    {
+      "id": "novasports_prime",
+      "name": "Novasports Prime",
+      "match": "Novasports Prime",
+      "url": ""
+    },
+    {
+      "id": "novasports_start",
+      "name": "Novasports Start",
+      "match": "Novasports Start",
+      "url": ""
+    },
+    {
+      "id": "magenta_sports1",
+      "name": "Magenta Sports 1",
+      "match": "Magenta Sports 1",
+      "url": ""
+    },
+    {
+      "id": "magenta_sports2",
+      "name": "Magenta Sports 2",
+      "match": "Magenta Sports 2",
+      "url": ""
+    },
+    {
+      "id": "magenta_sports3",
+      "name": "Magenta Sports 3",
+      "match": "Magenta Sports 3",
+      "url": ""
+    }
+  ],
   "selectors": {
     "_comment": "Λίστες εναλλακτικών selectors. Δοκιμάζονται με τη σειρά. Αν αλλάξει η σελίδα login, διόρθωσέ τα εδώ (F12 → Inspect).",
     "cookie_accept": [
-      "button:has-text('Alle akzeptieren')",
-      "button:has-text('Accept all')",
       "button:has-text('Αποδοχή όλων')",
+      "button:has-text('Αποδοχή')",
+      "button:has-text('Συμφωνώ')",
+      "button:has-text('Accept all')",
+      "button:has-text('Accept')",
+      "#onetrust-accept-btn-handler",
       "#uc-btn-accept-banner"
     ],
     "login_entry": [
-      "button:has-text('Anmelden')",
-      "a:has-text('Anmelden')",
+      "button:has-text('Σύνδεση')",
+      "a:has-text('Σύνδεση')",
+      "button:has-text('Είσοδος')",
+      "a:has-text('Είσοδος')",
       "button:has-text('Login')",
-      "a:has-text('Login')",
-      "button:has-text('Σύνδεση')"
+      "a:has-text('Login')"
     ],
-    "username": ["#username", "input[name='username']", "input[type='email']", "#pw_usr"],
-    "username_next": ["#pw_submit", "button[type='submit']", "button:has-text('Weiter')"],
-    "password": ["#pw_pwd", "input[name='password']", "input[type='password']"],
-    "password_submit": ["#pw_submit", "button[type='submit']", "button:has-text('Login')", "button:has-text('Anmelden')"],
-    "logged_in_marker": ["[data-testid='profile']", "img[alt*='Profil']", "a[href*='profile']"]
+    "username": [
+      "#username",
+      "input[name='username']",
+      "input[type='email']",
+      "#pw_usr"
+    ],
+    "username_next": [
+      "button:has-text('Συνέχεια')",
+      "button:has-text('Επόμενο')",
+      "#pw_submit",
+      "button[type='submit']"
+    ],
+    "password": [
+      "#pw_pwd",
+      "input[name='password']",
+      "input[type='password']"
+    ],
+    "password_submit": [
+      "button:has-text('Σύνδεση')",
+      "button:has-text('Είσοδος')",
+      "#pw_submit",
+      "button[type='submit']",
+      "input[type='submit']"
+    ],
+    "play_button": [
+      "button:has-text('Παρακολούθηση')",
+      "button:has-text('Δες τώρα')",
+      "button:has-text('Ζωντανά')",
+      "button:has-text('Live')",
+      "button:has-text('Watch')",
+      "[class*='play' i]"
+    ]
   },
-
   "timeouts_ms": {
     "page": 30000,
     "element": 8000,

@@ -359,7 +359,7 @@ class MagentaPlayer:
             page.wait_for_timeout(500)
         return False
 
-    def _wait_video_or_login(self, page: Page, timeout_ms: int) -> str:
+    def _wait_video_or_login(self, page: Page, timeout_ms: int, ready: list[str] | None = None) -> str:
         """Περιμένει μέχρι να εμφανιστεί είτε video ("video") είτε φόρμα/κουμπί login ("login")."""
         s = self.cfg["selectors"]
         login_sel = s["username"] + s["password"] + s["login_entry"]
@@ -367,8 +367,10 @@ class MagentaPlayer:
         while time.time() < deadline:
             if self._video_playing(page):
                 return "video"
+            if ready and self._first_visible(page, ready, 300) is not None:
+                return "video"
             url = page.url.lower()
-            if "login" in url or "idm.telekom" in url or "accounts." in url:
+            if any(k in url for k in ("login", "signin", "sso", "auth", "idm.", "accounts.")):
                 return "login"
             if self._first_visible(page, login_sel, 300) is not None:
                 return "login"
@@ -387,27 +389,68 @@ class MagentaPlayer:
         ch = self.channels[channel_id]
         self._current = ch
         self._locked = False
+        direct = bool(ch.get("url"))
+        target = ch["url"] if direct else self.cfg["channels_url"]
+        tile_sel = self._tile_selectors(ch)
+
         self._set("starting", f"Άνοιγμα Chrome για {ch['name']}…", channel=channel_id)
         page = self._ensure_browser()
         page.bring_to_front()
 
         self._set("loading", f"Φόρτωση {ch['name']}…")
-        page.goto(ch["url"], wait_until="domcontentloaded")
+        page.goto(target, wait_until="domcontentloaded")
         self._accept_cookies(page)
 
-        if self._wait_video_or_login(page, 20000) == "login":
+        ready = [] if direct else tile_sel
+        if self._wait_video_or_login(page, 20000, ready) == "login":
             self._login(page)
             self._set("loading", f"Μετάβαση στο {ch['name']}…")
-            page.goto(ch["url"], wait_until="domcontentloaded")
+            page.goto(target, wait_until="domcontentloaded")
             self._accept_cookies(page)
 
+        if not direct:
+            self._open_from_list(page, ch, tile_sel)
+
         self._set("loading", "Αναμονή για το video…")
-        if not self._wait_for_video(page, self.cfg["timeouts_ms"]["video"]):
-            raise PlayerError("Το video δεν ξεκίνησε. Έλεγξε το URL καναλιού και τα στοιχεία σύνδεσης.")
+        if not self._wait_for_video(page, 6000):
+            play = self._first_visible(page, self.cfg["selectors"].get("play_button", []), 3000)
+            if play:
+                play.click()
+            if not self._wait_for_video(page, self.cfg["timeouts_ms"]["video"]):
+                raise PlayerError("Το video δεν ξεκίνησε. Έλεγξε το κανάλι στο config.json και τα στοιχεία σύνδεσης.")
 
         self._channel_url = page.url
         self._lock_page()
         self._set("playing", f"Παίζει: {ch['name']}")
+
+    def _tile_selectors(self, ch: dict) -> list[str]:
+        """Selectors για το 'πλακίδιο' του καναλιού στη λίστα καναλιών."""
+        if ch.get("selector"):
+            sel = ch["selector"]
+            return sel if isinstance(sel, list) else [sel]
+        m = ch.get("match", ch["name"]).replace('"', '\\"')
+        return [
+            f'[title="{m}" i]', f'img[alt="{m}" i]', f'[aria-label="{m}" i]',
+            f'text="{m}"',
+            f'[title*="{m}" i]', f'img[alt*="{m}" i]', f'[aria-label*="{m}" i]',
+            f"text={m}",
+        ]
+
+    def _open_from_list(self, page: Page, ch: dict, selectors: list[str]) -> None:
+        """Βρίσκει το κανάλι στη σελίδα καναλιών (με scroll αν χρειάζεται) και το πατάει."""
+        self._set("loading", f"Επιλογή καναλιού {ch['name']}…")
+        for _ in range(25):
+            loc = self._first_visible(page, selectors, 800)
+            if loc:
+                loc.scroll_into_view_if_needed()
+                loc.click()
+                page.wait_for_timeout(1500)
+                return
+            page.mouse.wheel(0, 600)
+            page.keyboard.press("PageDown")
+        raise PlayerError(
+            f"Δεν βρέθηκε το '{ch['name']}' στη λίστα καναλιών – βάλε σωστό \"match\" ή \"selector\" στο config.json"
+        )
 
     def _do_mute(self, muted: bool) -> bool:
         self._require_playing()
@@ -464,7 +507,7 @@ class MagentaPlayer:
             self._set("idle", "Το παράθυρο έκλεισε", channel=None)
             return
         try:
-            if self._channel_url and page.url.split("#")[0] != self._channel_url.split("#")[0]:
+            if self._channel_url and page.url != self._channel_url:
                 self._set("loading", "Επιστροφή στο κανάλι…")
                 page.goto(self._channel_url, wait_until="domcontentloaded")
                 self._wait_for_video(page, self.cfg["timeouts_ms"]["video"])
