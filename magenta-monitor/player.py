@@ -253,6 +253,11 @@ class MagentaPlayer:
                 if reply:
                     reply.put((False, str(exc)))
                 if cmd == "play":
+                    # Σε σφάλμα εμφάνισε το παράθυρο (π.χ. για κωδικό SMS / captcha).
+                    try:
+                        self._show_window()
+                    except Exception:  # noqa: BLE001
+                        pass
                     self._locked = False
                     self._set("error", f"Σφάλμα: {exc}")
 
@@ -296,6 +301,12 @@ class MagentaPlayer:
             f"--user-data-dir={PROFILE_DIR}",
             f"--app={self.cfg.get('start_url', 'about:blank')}",
             f"--window-size={w},{h}",
+            # Το παράθυρο ξεκινά εκτός οθόνης: login/πλοήγηση γίνονται αόρατα.
+            *(["--window-position=-32000,-32000"] if self._hide else []),
+            "--disable-backgrounding-occluded-windows",
+            "--disable-renderer-backgrounding",
+            "--disable-background-timer-throttling",
+            "--disable-background-media-suspend",
             "--autoplay-policy=no-user-gesture-required",
             "--no-first-run",
             "--no-default-browser-check",
@@ -324,7 +335,33 @@ class MagentaPlayer:
         self._page = pages[0] if pages else self._ctx.new_page()
         # Αν κάτι ανοίξει νέο παράθυρο/tab, το κλείνουμε.
         self._ctx.on("page", lambda p: p.close() if p is not self._page else None)
+        if self._hide:
+            self._set_window({"left": -32000, "top": -32000})
         return self._page
+
+    @property
+    def _hide(self) -> bool:
+        return bool(self.cfg.get("hide_until_ready", True))
+
+    def _set_window(self, bounds: dict) -> None:
+        cdp = self._ctx.new_cdp_session(self._page)
+        try:
+            wid = cdp.send("Browser.getWindowForTarget")["windowId"]
+            state = cdp.send("Browser.getWindowBounds", {"windowId": wid})["bounds"].get("windowState")
+            if state != "normal":
+                cdp.send("Browser.setWindowBounds", {"windowId": wid, "bounds": {"windowState": "normal"}})
+            cdp.send("Browser.setWindowBounds", {"windowId": wid, "bounds": bounds})
+        finally:
+            cdp.detach()
+
+    def _show_window(self) -> None:
+        """Φέρνει το παράθυρο στην οθόνη (μόλις το κανάλι είναι έτοιμο)."""
+        if not self._hide or self._page is None or self._page.is_closed():
+            return
+        w, h = self.cfg.get("window_size", [1280, 720])
+        x, y = self.cfg.get("window_position", [100, 100])
+        self._set_window({"left": x, "top": y, "width": w, "height": h})
+        self._page.bring_to_front()
 
     def _close_browser(self) -> None:
         try:
@@ -452,7 +489,8 @@ class MagentaPlayer:
 
         self._set("starting", f"Άνοιγμα Chrome για {ch['name']}…", channel=channel_id)
         page = self._ensure_browser()
-        page.bring_to_front()
+        if not self._hide:
+            page.bring_to_front()
 
         self._set("loading", f"Φόρτωση {ch['name']}…")
         page.goto(target, wait_until="domcontentloaded")
@@ -464,6 +502,12 @@ class MagentaPlayer:
             self._set("loading", f"Μετάβαση στο {ch['name']}…")
             page.goto(target, wait_until="domcontentloaded")
             self._accept_cookies(page)
+
+        if self._select_profile(page):
+            self._set("loading", f"Μετάβαση στο {ch['name']}…")
+            page.goto(target, wait_until="domcontentloaded")
+            self._accept_cookies(page)
+            self._wait_video_or_login(page, 15000, ready)
 
         if not direct:
             self._open_from_list(page, ch, tile_sel)
@@ -478,7 +522,56 @@ class MagentaPlayer:
 
         self._channel_url = page.url
         self._lock_page()
+        self._show_window()
         self._set("playing", f"Παίζει: {ch['name']}")
+
+    def _select_profile(self, page: Page) -> bool:
+        """Αν εμφανιστεί η οθόνη επιλογής προφίλ, πατάει το προφίλ από το config ("profile")."""
+        name = (self.cfg.get("profile") or "").strip()
+        if not name:
+            return False
+        n = name.replace('"', '\\"')
+        sels = self.cfg["selectors"].get("profile") or [
+            f'text=/^\\s*{n}\\s*$/i',
+            f'[title="{n}" i]', f'[aria-label="{n}" i]', f'img[alt="{n}" i]',
+        ]
+        loc = self._first_visible(page, sels, 4000)
+        if not loc:
+            return False
+        self._set("loading", f"Επιλογή προφίλ '{name}'…")
+        loc.click()
+        page.wait_for_timeout(2500)
+        return True
+
+    def _dump_debug(self, page: Page, tag: str) -> None:
+        """Σώζει screenshot + λίστα με τα ονόματα που υπάρχουν στη σελίδα, για διάγνωση."""
+        out = BASE_DIR / "debug"
+        out.mkdir(exist_ok=True)
+        try:
+            page.screenshot(path=str(out / f"{tag}.png"))
+            labels = page.evaluate(
+                """() => {
+                  const seen = new Set(), rows = [];
+                  const add = (kind, v, el) => {
+                    v = (v || '').trim().replace(/\\s+/g, ' ');
+                    if (!v || v.length > 80 || seen.has(kind + v)) return;
+                    seen.add(kind + v);
+                    rows.push(`${kind}\\t${v}\\t<${el.tagName.toLowerCase()} class="${el.className}">`);
+                  };
+                  document.querySelectorAll('img[alt]').forEach(e => add('alt', e.alt, e));
+                  document.querySelectorAll('[title]').forEach(e => add('title', e.title, e));
+                  document.querySelectorAll('[aria-label]').forEach(e => add('aria', e.getAttribute('aria-label'), e));
+                  document.querySelectorAll('body *').forEach(e => {
+                    if (e.children.length === 0) add('text', e.textContent, e);
+                  });
+                  document.querySelectorAll('img[src]').forEach(e => add('src', e.src.split('/').pop(), e));
+                  return location.href + '\\n' + rows.join('\\n');
+                }"""
+            )
+            (out / f"{tag}.txt").write_text(labels, encoding="utf-8")
+            print(f"[debug] αποθηκεύτηκαν {out / (tag + '.png')} και {tag}.txt", flush=True)
+        except PWError as exc:
+            print(f"[debug] αποτυχία: {exc}", flush=True)
 
     def _tile_selectors(self, ch: dict) -> list[str]:
         """Selectors για το 'πλακίδιο' του καναλιού στη λίστα καναλιών."""
@@ -505,8 +598,9 @@ class MagentaPlayer:
                 return
             page.mouse.wheel(0, 600)
             page.keyboard.press("PageDown")
+        self._dump_debug(page, "channels")
         raise PlayerError(
-            f"Δεν βρέθηκε το '{ch['name']}' στη λίστα καναλιών – βάλε σωστό \"match\" ή \"selector\" στο config.json"
+            f"Δεν βρέθηκε το '{ch['name']}' στη λίστα καναλιών (στοιχεία στον φάκελο debug) – βάλε σωστό \"match\" ή \"selector\" στο config.json"
         )
 
     def _do_mute(self, muted: bool) -> bool:

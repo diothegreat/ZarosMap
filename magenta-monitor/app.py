@@ -29,6 +29,9 @@ if not cfg_path.exists() or "REPLACE-ME" in cfg_path.read_text(encoding="utf-8")
         print("Το config.json είναι παλιό – αντικαθίσταται από το config.example.json", flush=True)
     cfg_path.write_text((BASE_DIR / "config.example.json").read_text(encoding="utf-8"), encoding="utf-8")
 CONFIG = json.loads(cfg_path.read_text(encoding="utf-8"))
+# Προφίλ Magenta TV ("Ποιος βλέπει;"): από config.json ή από MAGENTA_PROFILE στο .env
+if not CONFIG.get("profile"):
+    CONFIG["profile"] = os.environ.get("MAGENTA_PROFILE", "")
 
 USER = os.environ.get("MAGENTA_USER", "")
 PASS = os.environ.get("MAGENTA_PASS", "")

@@ -2,11 +2,17 @@
   "_comment": "Αντέγραψε σε config.json. Κάθε κανάλι βρίσκεται με το όνομά του ('match') στη σελίδα καναλιών και πατιέται αυτόματα. Αν το κανάλι έχει δικό του URL (το βλέπεις στη γραμμή διευθύνσεων όταν παίζει), μπορείς να το βάλεις στο 'url' και θα ανοίγει απευθείας. Αν το όνομα δεν ταιριάζει, βάλε 'selector'.",
   "start_url": "https://streaming.magentatv.gr/",
   "channels_url": "https://streaming.magentatv.gr/#!/channels",
+  "profile": "",
   "chrome_channel": "chrome",
   "window_size": [
     1280,
     720
   ],
+  "window_position": [
+    100,
+    100
+  ],
+  "hide_until_ready": true,
   "channels": [
     {
       "id": "novasports1",
