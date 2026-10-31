@@ -1,5 +1,5 @@
 {
-  "_comment": "Αντέγραψε σε config.json. Κάθε κανάλι βρίσκεται με το όνομά του ('match') στη σελίδα καναλιών και πατιέται αυτόματα. Αν το κανάλι έχει δικό του URL (το βλέπεις στη γραμμή διευθύνσεων όταν παίζει), μπορείς να το βάλεις στο 'url' και θα ανοίγει απευθείας. Αν το όνομα δεν ταιριάζει, βάλε 'selector'.",
+  "_comment": "Αντέγραψε σε config.json. 'match' = το όνομα του καναλιού όπως είναι στη λίστα του Magenta TV (κρυφό aria-label, π.χ. 'Novasports1HD'). 'url' προαιρετικό για απευθείας άνοιγμα. 'selector' αν χρειαστεί κάτι ειδικό.",
   "start_url": "https://streaming.magentatv.gr/",
   "channels_url": "https://streaming.magentatv.gr/#!/channels",
   "profile": "",
@@ -15,69 +15,165 @@
   "hide_until_ready": true,
   "channels": [
     {
-      "id": "novasports1",
-      "name": "Novasports 1",
-      "match": "Novasports 1",
-      "url": ""
-    },
-    {
-      "id": "novasports2",
-      "name": "Novasports 2",
-      "match": "Novasports 2",
-      "url": ""
-    },
-    {
-      "id": "novasports3",
-      "name": "Novasports 3",
-      "match": "Novasports 3",
-      "url": ""
-    },
-    {
-      "id": "novasports4",
-      "name": "Novasports 4",
-      "match": "Novasports 4",
-      "url": ""
-    },
-    {
-      "id": "novasports5",
-      "name": "Novasports 5",
-      "match": "Novasports 5",
-      "url": ""
-    },
-    {
-      "id": "novasports6",
-      "name": "Novasports 6",
-      "match": "Novasports 6",
-      "url": ""
-    },
-    {
-      "id": "novasports_prime",
-      "name": "Novasports Prime",
-      "match": "Novasports Prime",
-      "url": ""
-    },
-    {
-      "id": "novasports_start",
+      "id": "novasports_start_hd",
       "name": "Novasports Start",
-      "match": "Novasports Start",
+      "match": "Novasports Start HD",
       "url": ""
     },
     {
-      "id": "magenta_sports1",
-      "name": "Magenta Sports 1",
-      "match": "Magenta Sports 1",
+      "id": "novasports_prime_hd",
+      "name": "Novasports Prime",
+      "match": "Novasports Prime HD",
       "url": ""
     },
     {
-      "id": "magenta_sports2",
-      "name": "Magenta Sports 2",
-      "match": "Magenta Sports 2",
+      "id": "novasports1hd",
+      "name": "Novasports 1",
+      "match": "Novasports1HD",
       "url": ""
     },
     {
-      "id": "magenta_sports3",
-      "name": "Magenta Sports 3",
-      "match": "Magenta Sports 3",
+      "id": "novasports2hd",
+      "name": "Novasports 2",
+      "match": "Novasports2HD",
+      "url": ""
+    },
+    {
+      "id": "novasports3hd",
+      "name": "Novasports 3",
+      "match": "Novasports3HD",
+      "url": ""
+    },
+    {
+      "id": "novasports4hd",
+      "name": "Novasports 4",
+      "match": "Novasports4HD",
+      "url": ""
+    },
+    {
+      "id": "novasports5hd",
+      "name": "Novasports 5",
+      "match": "Novasports5HD",
+      "url": ""
+    },
+    {
+      "id": "novasports6hd",
+      "name": "Novasports 6",
+      "match": "Novasports6HD",
+      "url": ""
+    },
+    {
+      "id": "novasports_premier_league_hd",
+      "name": "Novasports Premier League",
+      "match": "Novasports Premier League HD",
+      "url": ""
+    },
+    {
+      "id": "novasportsextra1hd",
+      "name": "Novasports Extra 1",
+      "match": "Novasportsextra1HD",
+      "url": ""
+    },
+    {
+      "id": "novasportsextra2hd",
+      "name": "Novasports Extra 2",
+      "match": "Novasportsextra2HD",
+      "url": ""
+    },
+    {
+      "id": "novasportsextra3hd",
+      "name": "Novasports Extra 3",
+      "match": "Novasportsextra3HD",
+      "url": ""
+    },
+    {
+      "id": "novasports_news_hd",
+      "name": "Novasports News",
+      "match": "Novasports News HD",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_1",
+      "name": "Magenta Sport 1",
+      "match": "Magenta Sport 1",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_2",
+      "name": "Magenta Sport 2",
+      "match": "Magenta Sport 2",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_3",
+      "name": "Magenta Sport 3",
+      "match": "Magenta Sport 3",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_4",
+      "name": "Magenta Sport 4",
+      "match": "Magenta Sport 4",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_5",
+      "name": "Magenta Sport 5",
+      "match": "Magenta Sport 5",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_6",
+      "name": "Magenta Sport 6",
+      "match": "Magenta Sport 6",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_7",
+      "name": "Magenta Sport 7",
+      "match": "Magenta Sport 7",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_8",
+      "name": "Magenta Sport 8",
+      "match": "Magenta Sport 8",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_9",
+      "name": "Magenta Sport 9",
+      "match": "Magenta Sport 9",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_1_league",
+      "name": "Magenta Sport 1 League",
+      "match": "Magenta Sport 1 League",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_2_league",
+      "name": "Magenta Sport 2 League",
+      "match": "Magenta Sport 2 League",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_3_league",
+      "name": "Magenta Sport 3 League",
+      "match": "Magenta Sport 3 League",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_4_league",
+      "name": "Magenta Sport 4 League",
+      "match": "Magenta Sport 4 League",
+      "url": ""
+    },
+    {
+      "id": "magenta_sport_highlights",
+      "name": "Magenta Sport Highlights",
+      "match": "Magenta Sport Highlights",
       "url": ""
     }
   ],

@@ -616,6 +616,8 @@ class MagentaPlayer:
             return sel if isinstance(sel, list) else [sel]
         m = ch.get("match", ch["name"]).replace('"', '\\"')
         return [
+            # Magenta TV GR: <div class="channels-channel" aria-label="51 από 104 Novasports1HD">
+            f'.channels-channel[aria-label$=" {m}" i]',
             f'[title="{m}" i]', f'img[alt="{m}" i]', f'[aria-label="{m}" i]',
             f'text="{m}"',
             f'[title*="{m}" i]', f'img[alt*="{m}" i]', f'[aria-label*="{m}" i]',
