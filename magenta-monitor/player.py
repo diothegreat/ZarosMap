@@ -213,6 +213,33 @@ LABELS_JS = r"""
 """
 
 
+# Ενσωματωμένοι selectors για το streaming.magentatv.gr. Προστίθενται ΜΕΤΑ από
+# αυτούς του config.json, οπότε δεν χρειάζεται να ενημερώνεις το config.
+DEFAULT_SELECTORS: dict[str, list[str]] = {
+    "cookie_accept": [
+        "button.acceptAll", "button:has-text('Ενημερώθηκα')", "button:has-text('I have been informed')",
+        "button:has-text('Accept')",
+    ],
+    "menu": [
+        ".nav-burger", "[aria-label='Μενού']", "[aria-label='Menu']", ".navbar-toggler",
+    ],
+    "login_entry": [
+        "text=/^\\s*(Σύνδεση|Είσοδος|Sign ?in|Log ?in|Login)\\s*$/i",
+        "button:has-text('Sign in')", "a:has-text('Sign in')",
+        "button:has-text('Log in')", "a:has-text('Log in')",
+    ],
+    "username": ["input[type='email']", "input[name*='user' i]", "input[name*='mail' i]",
+                 "input[id*='user' i]", "input[type='text']"],
+    "password": ["input[type='password']"],
+    "username_next": ["button:has-text('Next')", "button:has-text('Continue')", "button[type='submit']"],
+    "password_submit": ["button:has-text('Sign in')", "button:has-text('Log in')", "button[type='submit']",
+                        "input[type='submit']"],
+    # Υπάρχει μόνο όταν είσαι συνδεδεμένος (avatar προφίλ πάνω δεξιά)
+    "logged_in": ["img.nav-avatar", ".ic2-notifications"],
+    "channel_tile": [".channels-channel"],
+}
+
+
 class PlayerError(RuntimeError):
     pass
 
@@ -225,6 +252,10 @@ class MagentaPlayer:
         self.username = username
         self.password = password
         self.channels = {c["id"]: c for c in config["channels"]}
+        sel = config.setdefault("selectors", {})
+        for key, defaults in DEFAULT_SELECTORS.items():
+            cur = [x for x in sel.get(key, []) if isinstance(x, str)]
+            sel[key] = cur + [d for d in defaults if d not in cur]
 
         self._q: "queue.Queue[tuple[str, Any, queue.Queue | None]]" = queue.Queue()
         self._lock = threading.Lock()
@@ -461,7 +492,14 @@ class MagentaPlayer:
 
         user = self._first_visible(page, s["username"], 1500)
         if not user:
-            entry = self._first_visible(page, s["login_entry"], t)
+            entry = self._first_visible(page, s["login_entry"], 3000)
+            if not entry:
+                # Στο Magenta TV GR το "Σύνδεση" είναι μέσα στο μενού ☰
+                menu = self._first_visible(page, s["menu"], 3000)
+                if menu:
+                    menu.click()
+                    page.wait_for_timeout(1000)
+                entry = self._first_visible(page, s["login_entry"], t)
             if entry:
                 entry.click()
                 page.wait_for_load_state("domcontentloaded")
@@ -481,7 +519,8 @@ class MagentaPlayer:
             pwd = self._first_visible(page, s["password"], 1000)
 
         if not pwd:
-            raise PlayerError("Δεν βρέθηκε πεδίο κωδικού – έλεγξε τους selectors στο config.json")
+            self._dump_debug(page, "login")
+            raise PlayerError("Δεν βρέθηκε η φόρμα σύνδεσης (στοιχεία στον φάκελο debug: login.png / login.txt)")
         pwd.fill(self.password)
         btn = self._first_visible(page, s["password_submit"], t)
         if btn:
@@ -490,6 +529,12 @@ class MagentaPlayer:
             pwd.press("Enter")
         page.wait_for_load_state("domcontentloaded")
         page.wait_for_timeout(3000)
+        if self._first_visible(page, s["password"], 1500):
+            self._dump_debug(page, "login")
+            raise PlayerError("Η σύνδεση απέτυχε – έλεγξε email/κωδικό στο .env (στοιχεία: debug/login.png)")
+
+    def _is_logged_in(self, page: Page, timeout_ms: int) -> bool:
+        return self._first_visible(page, self.cfg["selectors"]["logged_in"], timeout_ms) is not None
 
     def _wait_for_video(self, page: Page, timeout_ms: int) -> bool:
         deadline = time.time() + timeout_ms / 1000
@@ -532,6 +577,7 @@ class MagentaPlayer:
         direct = bool(ch.get("url"))
         target = ch["url"] if direct else self.cfg["channels_url"]
         tile_sel = self._tile_selectors(ch)
+        self._seen_labels = {}
 
         self._set("starting", f"Άνοιγμα Chrome για {ch['name']}…", channel=channel_id)
         page = self._ensure_browser()
@@ -542,18 +588,19 @@ class MagentaPlayer:
         page.goto(target, wait_until="domcontentloaded")
         self._accept_cookies(page)
 
-        ready = [] if direct else tile_sel
+        # "Έτοιμη σελίδα" = εμφανίστηκαν κανάλια ή τουλάχιστον το μενού της εφαρμογής.
+        ready = [] if direct else tile_sel + self.cfg["selectors"]["menu"]
         if self._wait_video_or_login(page, 20000, ready) == "login":
             self._login(page)
-            self._set("loading", f"Μετάβαση στο {ch['name']}…")
-            page.goto(target, wait_until="domcontentloaded")
-            self._accept_cookies(page)
+            self._after_login(page, target, ready)
 
-        if self._select_profile(page):
-            self._set("loading", f"Μετάβαση στο {ch['name']}…")
-            page.goto(target, wait_until="domcontentloaded")
-            self._accept_cookies(page)
-            self._wait_video_or_login(page, 15000, ready)
+        self._handle_profile(page, target, ready)
+
+        if not direct and not self._is_logged_in(page, 6000):
+            # Guest mode (π.χ. έληξε η σύνδεση): άδεια λίστα καναλιών, χωρίς avatar.
+            self._login(page)
+            self._after_login(page, target, ready)
+            self._handle_profile(page, target, ready)
 
         if not direct:
             self._open_from_list(page, ch, tile_sel)
@@ -570,6 +617,17 @@ class MagentaPlayer:
         self._lock_page()
         self._show_window()
         self._set("playing", f"Παίζει: {ch['name']}")
+
+    def _after_login(self, page: Page, target: str, ready: list[str]) -> None:
+        name = self._current["name"] if self._current else ""
+        self._set("loading", f"Μετάβαση στο {name}…")
+        page.goto(target, wait_until="domcontentloaded")
+        self._accept_cookies(page)
+        self._wait_video_or_login(page, 15000, ready)
+
+    def _handle_profile(self, page: Page, target: str, ready: list[str]) -> None:
+        if self._select_profile(page):
+            self._after_login(page, target, ready)
 
     def _select_profile(self, page: Page) -> bool:
         """Αν εμφανιστεί η οθόνη επιλογής προφίλ, πατάει το προφίλ από το config ("profile")."""
