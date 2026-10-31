@@ -42,12 +42,19 @@ LOCK_JS = r"""
 (() => {
   if (document.getElementById('mm-shield')) return true;
 
+  // Το video που ΠΑΙΖΕΙ πραγματικά (μπορεί να υπάρχουν κι άλλα, κρυφά/άδεια, στη σελίδα).
+  const allVideos = () => [...document.querySelectorAll('video')];
   const pickVideo = () => {
-    const vids = [...document.querySelectorAll('video')];
+    const score = v =>
+      ((!v.paused && v.readyState >= 2) ? 4e12 : 0) +
+      (v.videoWidth * v.videoHeight) * 1e3 +
+      (v.clientWidth * v.clientHeight);
+    const vids = allVideos();
     if (!vids.length) return null;
-    return vids.sort((a, b) =>
-      (b.clientWidth * b.clientHeight) - (a.clientWidth * a.clientHeight))[0];
+    return vids.sort((a, b) => score(b) - score(a))[0];
   };
+  const setMuted = m => allVideos().forEach(v => { v.muted = m; });
+  const setVolume = x => allVideos().forEach(v => { v.volume = x; v.muted = (x === 0); });
 
   const style = document.createElement('style');
   style.id = 'mm-style';
@@ -103,27 +110,29 @@ LOCK_JS = r"""
   const sync = () => {
     const v = pickVideo();
     if (!v) return;
-    if (!v.classList.contains('mm-video')) v.classList.add('mm-video');
+    if (window.__mmFit !== false) {
+      allVideos().forEach(o => { if (o !== v) o.classList.remove('mm-video'); });
+      if (!v.classList.contains('mm-video')) v.classList.add('mm-video');
+    }
     v.controls = false;
     muteBtn.textContent = (v.muted || v.volume === 0) ? '🔇' : '🔊';
     if (document.activeElement !== vol) vol.value = Math.round(v.volume * 100);
   };
   window.__mmSync = sync;
+  window.__mmSetMuted = m => { setMuted(m); sync(); const v = pickVideo(); return v ? v.muted : null; };
+  window.__mmSetVolume = x => { setVolume(x / 100); sync(); const v = pickVideo(); return v ? Math.round(v.volume * 100) : null; };
   setInterval(sync, 500);
   sync();
 
-  const toggleMute = () => { const v = pickVideo(); if (v) { v.muted = !v.muted; sync(); } };
-  const toggleFs = () => {
-    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    else document.documentElement.requestFullscreen().catch(() => {});
-  };
+  const toggleMute = () => { const v = pickVideo(); if (v) { setMuted(!v.muted); sync(); } };
+  // Η πλήρης οθόνη γίνεται από το Python (CDP) – εδώ απλώς το ζητάμε.
+  const toggleFs = () => { window.__mmFsRequest = true; };
 
   muteBtn.addEventListener('click', e => { e.stopPropagation(); toggleMute(); });
   fsBtn.addEventListener('click', e => { e.stopPropagation(); toggleFs(); });
   vol.addEventListener('input', e => {
     e.stopPropagation();
-    const v = pickVideo();
-    if (v) { v.volume = vol.value / 100; v.muted = (v.volume === 0); sync(); }
+    setVolume(vol.value / 100); sync();
   });
   shield.addEventListener('dblclick', e => { if (e.target === shield) toggleFs(); });
 
@@ -153,8 +162,8 @@ LOCK_JS = r"""
     const v = pickVideo();
     if (k === 'm' || k === 'M') toggleMute();
     else if (k === 'f' || k === 'F') toggleFs();
-    else if (v && k === 'ArrowUp')   { v.muted = false; v.volume = Math.min(1, v.volume + .05); sync(); }
-    else if (v && k === 'ArrowDown') { v.volume = Math.max(0, v.volume - .05); sync(); }
+    else if (v && k === 'ArrowUp')   { setVolume(Math.min(1, v.volume + .05)); sync(); }
+    else if (v && k === 'ArrowDown') { setVolume(Math.max(0, v.volume - .05)); sync(); }
   };
   ['keydown','keyup','keypress'].forEach(t =>
     window.addEventListener(t, keys, { capture: true }));
@@ -166,7 +175,7 @@ LOCK_JS = r"""
 VIDEO_PLAYING_JS = r"""
 (() => {
   const v = [...document.querySelectorAll('video')]
-    .find(v => v.readyState >= 2 && v.clientWidth > 100);
+    .find(v => v.readyState >= 2 && v.videoWidth > 0);
   return !!v;
 })()
 """
@@ -631,6 +640,7 @@ class MagentaPlayer:
         assert self._page is not None
         title = (self._current or {}).get("name", "")
         self._page.evaluate(f"window.__mmTitle = {title!r};")
+        self._page.evaluate(f"window.__mmFit = {'true' if self.cfg.get('fit_video', True) else 'false'};")
         self._page.evaluate(LOCK_JS)
         self._locked = True
 
@@ -804,17 +814,16 @@ class MagentaPlayer:
     def _do_mute(self, muted: bool) -> bool:
         self._require_playing()
         return self._page.evaluate(
-            "m => { const v=[...document.querySelectorAll('video')].find(v=>v.readyState>=2);"
-            " if(!v) return null; v.muted=m; window.__mmSync&&__mmSync(); return v.muted; }",
+            "m => window.__mmSetMuted ? __mmSetMuted(m)"
+            " : ([...document.querySelectorAll('video')].forEach(v => v.muted = m), m)",
             bool(muted),
         )
 
     def _do_volume(self, vol: int) -> int:
         self._require_playing()
         return self._page.evaluate(
-            "x => { const v=[...document.querySelectorAll('video')].find(v=>v.readyState>=2);"
-            " if(!v) return null; v.volume=x/100; v.muted=(x===0); window.__mmSync&&__mmSync();"
-            " return Math.round(v.volume*100); }",
+            "x => window.__mmSetVolume ? __mmSetVolume(x)"
+            " : ([...document.querySelectorAll('video')].forEach(v => { v.volume = x/100; v.muted = x===0; }), x)",
             vol,
         )
 
@@ -860,6 +869,8 @@ class MagentaPlayer:
                 page.goto(self._channel_url, wait_until="domcontentloaded")
                 self._wait_for_video(page, self.cfg["timeouts_ms"]["video"])
                 self._set("playing", f"Παίζει: {self._current['name']}")
+            if page.evaluate("(() => { const r = !!window.__mmFsRequest; window.__mmFsRequest = false; return r; })()"):
+                self._do_fullscreen(None)
             if not page.evaluate("!!document.getElementById('mm-shield')"):
                 if self._video_playing(page):
                     self._lock_page()
