@@ -6,3 +6,4 @@ __pycache__/
 debug/
 session.json
 web_auth.json
+vps_config.bat

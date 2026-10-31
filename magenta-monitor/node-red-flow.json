@@ -4,38 +4,74 @@
     "type": "tab",
     "label": "Magenta Monitor",
     "disabled": false,
-    "info": "▶ Άνοιγμα: ξεκινά τον server (αν δεν τρέχει) και ανοίγει τη σελίδα.\n■ Κλείσιμο: κλείνει Chrome + server.\nΑν ο φάκελος δεν είναι C:\\magenta-monitor, άλλαξε τη διαδρομή στα δύο exec nodes."
+    "info": "▶ Τοπικά: ανοίγει http://127.0.0.1:5000 σε αυτό το PC.\n▶ Μέσω VPS: ανοίγει και SSH tunnel προς το VPS, ώστε η σελίδα να ανοίγει από παντού (το video παίζει πάντα σε αυτό το PC).\n■ Κλείσιμο: Chrome + server + tunnel.\nΑν ο φάκελος δεν είναι C:\\magenta-monitor, άλλαξε τη διαδρομή στα exec nodes."
   },
   {
-    "id": "mm_open",
+    "id": "mm_open_local",
     "type": "inject",
     "z": "mm_tab",
-    "name": "▶ Άνοιγμα Magenta Monitor",
+    "name": "▶ Άνοιγμα (τοπικά)",
     "props": [],
     "repeat": "",
     "once": false,
-    "x": 180,
-    "y": 100,
+    "x": 190,
+    "y": 80,
     "wires": [
       [
-        "mm_open_exec"
+        "mm_exec_local"
       ]
     ]
   },
   {
-    "id": "mm_open_exec",
+    "id": "mm_exec_local",
     "type": "exec",
     "z": "mm_tab",
-    "name": "open_monitor.bat",
-    "command": "cmd /c start \"\" /min \"C:\\magenta-monitor\\open_monitor.bat\"",
+    "name": "open local",
+    "command": "cmd /c start \"\" /min \"C:\\magenta-monitor\\open_monitor.bat\" local",
     "addpay": "",
     "append": "",
     "useSpawn": "false",
     "timer": "",
     "winHide": true,
     "oldrc": false,
-    "x": 440,
-    "y": 100,
+    "x": 470,
+    "y": 80,
+    "wires": [
+      [],
+      [],
+      []
+    ]
+  },
+  {
+    "id": "mm_open_vps",
+    "type": "inject",
+    "z": "mm_tab",
+    "name": "▶ Άνοιγμα (μέσω VPS)",
+    "props": [],
+    "repeat": "",
+    "once": false,
+    "x": 190,
+    "y": 160,
+    "wires": [
+      [
+        "mm_exec_vps"
+      ]
+    ]
+  },
+  {
+    "id": "mm_exec_vps",
+    "type": "exec",
+    "z": "mm_tab",
+    "name": "open vps",
+    "command": "cmd /c start \"\" /min \"C:\\magenta-monitor\\open_monitor.bat\" vps",
+    "addpay": "",
+    "append": "",
+    "useSpawn": "false",
+    "timer": "",
+    "winHide": true,
+    "oldrc": false,
+    "x": 470,
+    "y": 160,
     "wires": [
       [],
       [],
@@ -46,23 +82,23 @@
     "id": "mm_close",
     "type": "inject",
     "z": "mm_tab",
-    "name": "■ Κλείσιμο (Chrome + server)",
+    "name": "■ Κλείσιμο (Chrome + server + tunnel)",
     "props": [],
     "repeat": "",
     "once": false,
-    "x": 180,
-    "y": 180,
+    "x": 190,
+    "y": 240,
     "wires": [
       [
-        "mm_close_exec"
+        "mm_exec_close"
       ]
     ]
   },
   {
-    "id": "mm_close_exec",
+    "id": "mm_exec_close",
     "type": "exec",
     "z": "mm_tab",
-    "name": "stop_monitor.bat",
+    "name": "stop",
     "command": "cmd /c \"C:\\magenta-monitor\\stop_monitor.bat\"",
     "addpay": "",
     "append": "",
@@ -70,8 +106,8 @@
     "timer": "",
     "winHide": true,
     "oldrc": false,
-    "x": 440,
-    "y": 180,
+    "x": 470,
+    "y": 240,
     "wires": [
       [],
       [],

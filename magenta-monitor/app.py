@@ -16,8 +16,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 import secrets
+import time as _time
 
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from player import MagentaPlayer, PlayerError
@@ -69,14 +71,37 @@ AUTH = load_auth()
 
 app = Flask(__name__)
 app.secret_key = AUTH["secret_key"]
+# Πίσω από το nginx του VPS: σωστή IP επισκέπτη / https
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+app.config.update(SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE="Lax",
+                  PERMANENT_SESSION_LIFETIME=7 * 24 * 3600)
+
+# Προστασία από δοκιμές κωδικών: 5 λάθος προσπάθειες ανά IP => κλείδωμα 10 λεπτά
+FAILED: dict[str, list[float]] = {}
+MAX_FAILS, LOCK_SECONDS = 5, 600
+
+
+def _is_locked_out(ip: str) -> bool:
+    now = _time.time()
+    FAILED[ip] = [t for t in FAILED.get(ip, []) if now - t < LOCK_SECONDS]
+    return len(FAILED[ip]) >= MAX_FAILS
+
+
+def _is_direct_local() -> bool:
+    """Αίτημα κατευθείαν από τον ίδιο υπολογιστή (όχι μέσω VPS/nginx)."""
+    return request.headers.get("X-Forwarded-For") is None and request.remote_addr == "127.0.0.1"
 
 # Χωρίς login: η σελίδα login και ό,τι χρειάζεται το Node-RED.
-PUBLIC_ENDPOINTS = {"login", "static", "health", "shutdown"}
+PUBLIC_ENDPOINTS = {"login", "static"}
+# Για το Node-RED: χωρίς login, αλλά ΜΟΝΟ από τον ίδιο τον υπολογιστή (όχι μέσω VPS)
+LOCAL_ONLY_ENDPOINTS = {"health", "shutdown"}
 
 
 @app.before_request
 def require_login():
     if request.endpoint in PUBLIC_ENDPOINTS or session.get("user"):
+        return None
+    if request.endpoint in LOCAL_ONLY_ENDPOINTS and _is_direct_local():
         return None
     if request.path.startswith("/api/"):
         return jsonify(ok=False, error="Απαιτείται σύνδεση"), 401
@@ -86,15 +111,20 @@ def require_login():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
-    if request.method == "POST":
+    ip = request.remote_addr or "?"
+    if request.method == "POST" and _is_locked_out(ip):
+        error = "Πολλές λάθος προσπάθειες – δοκίμασε ξανά σε 10 λεπτά"
+    elif request.method == "POST":
         user = request.form.get("username", "")
         pwd = request.form.get("password", "")
         if user == AUTH["username"] and check_password_hash(AUTH["password_hash"], pwd):
+            FAILED.pop(ip, None)
             session.clear()
             session["user"] = user
             session.permanent = True
             nxt = request.args.get("next", "/")
             return redirect(nxt if nxt.startswith("/") and not nxt.startswith("//") else "/")
+        FAILED.setdefault(ip, []).append(_time.time())
         error = "Λάθος όνομα χρήστη ή κωδικός"
     return render_template("login.html", error=error)
 
