@@ -14,9 +14,14 @@ API δεν είναι thread-safe), και ο Flask στέλνει εντολέ�
 
 from __future__ import annotations
 
+import os
 import queue
+import shutil
+import socket
+import subprocess
 import threading
 import time
+import urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -182,6 +187,8 @@ class MagentaPlayer:
 
         self._pw = None
         self._ctx = None
+        self._browser = None
+        self._proc: subprocess.Popen | None = None
         self._page: Page | None = None
         self._locked = False
         self._channel_url: str | None = None
@@ -250,40 +257,90 @@ class MagentaPlayer:
                     self._set("error", f"Σφάλμα: {exc}")
 
     # ---------------------------------------------------------- browser ----
+    def _find_chrome(self) -> str:
+        if self.cfg.get("chrome_path"):
+            return self.cfg["chrome_path"]
+        candidates = [
+            os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+            os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+            os.path.expandvars(r"%LocalAppData%\Google\Chrome\Application\chrome.exe"),
+            "/usr/bin/google-chrome", "/opt/google/chrome/chrome",
+        ]
+        for c in candidates:
+            if os.path.isfile(c):
+                return c
+        found = shutil.which("chrome") or shutil.which("google-chrome")
+        if found:
+            return found
+        raise PlayerError("Δεν βρέθηκε το Google Chrome – βάλε \"chrome_path\" στο config.json")
+
+    @staticmethod
+    def _free_port() -> int:
+        with socket.socket() as sock:
+            sock.bind(("127.0.0.1", 0))
+            return sock.getsockname()[1]
+
     def _ensure_browser(self) -> Page:
+        """Ανοίγει το κανονικό Chrome σε 'app' παράθυρο (χωρίς γραμμή διευθύνσεων/tabs)
+        και συνδέεται σε αυτό μέσω CDP. Έτσι δεν υπάρχουν banners αυτοματισμού
+        ('--no-sandbox', 'controlled by automated software') και δουλεύει το DRM."""
         if self._ctx is not None and self._page is not None and not self._page.is_closed():
             return self._page
         self._close_browser()
         w, h = self.cfg.get("window_size", [1280, 720])
         PROFILE_DIR.mkdir(exist_ok=True)
-        self._ctx = self._pw.chromium.launch_persistent_context(
-            user_data_dir=str(PROFILE_DIR),
-            channel=self.cfg.get("chrome_channel", "chrome"),  # πραγματικό Chrome (Widevine)
-            headless=False,
-            no_viewport=True,
-            args=[
-                "--app=about:blank",                       # χωρίς γραμμή διευθύνσεων/tabs
-                f"--window-size={w},{h}",
-                "--autoplay-policy=no-user-gesture-required",
-                "--disable-blink-features=AutomationControlled",
-                "--disable-infobars",
-                "--disable-session-crashed-bubble",
-                "--no-first-run",
-            ],
-            ignore_default_args=["--enable-automation", "--mute-audio"],
-        )
+        port = self._free_port()
+        self._proc = subprocess.Popen([
+            self._find_chrome(),
+            f"--remote-debugging-port={port}",
+            f"--user-data-dir={PROFILE_DIR}",
+            f"--app={self.cfg.get('start_url', 'about:blank')}",
+            f"--window-size={w},{h}",
+            "--autoplay-policy=no-user-gesture-required",
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--disable-session-crashed-bubble",
+            "--disable-features=Translate,TranslateUI",
+            *self.cfg.get("chrome_args", []),
+        ])
+        endpoint = f"http://127.0.0.1:{port}"
+        deadline = time.time() + 20
+        while True:
+            try:
+                urllib.request.urlopen(endpoint + "/json/version", timeout=1).read()
+                break
+            except OSError:
+                if time.time() > deadline or self._proc.poll() is not None:
+                    raise PlayerError("Το Chrome δεν άνοιξε (μήπως είναι ήδη ανοιχτό με το ίδιο προφίλ;)")
+                time.sleep(0.3)
+        self._browser = self._pw.chromium.connect_over_cdp(endpoint)
+        self._ctx = self._browser.contexts[0]
         self._ctx.set_default_timeout(self.cfg["timeouts_ms"]["page"])
-        self._page = self._ctx.pages[0] if self._ctx.pages else self._ctx.new_page()
+        for _ in range(40):
+            pages = [p for p in self._ctx.pages if not p.url.startswith(("devtools:", "chrome-extension:"))]
+            if pages:
+                break
+            time.sleep(0.25)
+        self._page = pages[0] if pages else self._ctx.new_page()
         # Αν κάτι ανοίξει νέο παράθυρο/tab, το κλείνουμε.
         self._ctx.on("page", lambda p: p.close() if p is not self._page else None)
         return self._page
 
     def _close_browser(self) -> None:
         try:
-            if self._ctx is not None:
-                self._ctx.close()
+            if getattr(self, "_browser", None) is not None:
+                self._browser.close()
         except PWError:
             pass
+        proc = getattr(self, "_proc", None)
+        if proc is not None and proc.poll() is None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+        self._proc = None
+        self._browser = None
         self._ctx = None
         self._page = None
         self._locked = False
@@ -502,8 +559,7 @@ class MagentaPlayer:
             return
         page = self._page
         if page is None or page.is_closed():
-            self._locked = False
-            self._ctx = None
+            self._close_browser()
             self._set("idle", "Το παράθυρο έκλεισε", channel=None)
             return
         try:

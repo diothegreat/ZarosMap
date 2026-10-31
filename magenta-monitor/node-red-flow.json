@@ -14,8 +14,13 @@
     "props": [],
     "repeat": "",
     "once": false,
-    "x": 170, "y": 100,
-    "wires": [["mm_health"]]
+    "x": 170,
+    "y": 100,
+    "wires": [
+      [
+        "mm_health"
+      ]
+    ]
   },
   {
     "id": "mm_health",
@@ -26,8 +31,13 @@
     "ret": "obj",
     "url": "http://127.0.0.1:5000/api/health",
     "reqTimeout": "1500",
-    "x": 400, "y": 100,
-    "wires": [["mm_switch"]]
+    "x": 400,
+    "y": 100,
+    "wires": [
+      [
+        "mm_switch"
+      ]
+    ]
   },
   {
     "id": "mm_switch",
@@ -37,28 +47,49 @@
     "property": "statusCode",
     "propertyType": "msg",
     "rules": [
-      { "t": "eq", "v": "200", "vt": "num" },
-      { "t": "else" }
+      {
+        "t": "eq",
+        "v": "200",
+        "vt": "num"
+      },
+      {
+        "t": "else"
+      }
     ],
     "checkall": "false",
     "outputs": 2,
-    "x": 610, "y": 100,
-    "wires": [["mm_browser"], ["mm_start"]]
+    "x": 610,
+    "y": 100,
+    "wires": [
+      [
+        "mm_browser"
+      ],
+      [
+        "mm_start"
+      ]
+    ]
   },
   {
     "id": "mm_start",
     "type": "exec",
     "z": "mm_tab",
     "name": "Εκκίνηση server",
-    "command": "C:\\magenta-monitor\\start_server.bat",
+    "command": "cmd /c start \"\" /min \"C:\\magenta-monitor\\start_server.bat\"",
     "addpay": "",
     "append": "",
     "useSpawn": "false",
     "timer": "",
     "winHide": true,
     "oldrc": false,
-    "x": 620, "y": 180,
-    "wires": [["mm_delay"], [], []]
+    "x": 620,
+    "y": 180,
+    "wires": [
+      [
+        "mm_delay"
+      ],
+      [],
+      []
+    ]
   },
   {
     "id": "mm_delay",
@@ -68,8 +99,13 @@
     "pauseType": "delay",
     "timeout": "4",
     "timeoutUnits": "seconds",
-    "x": 810, "y": 180,
-    "wires": [["mm_browser"]]
+    "x": 810,
+    "y": 180,
+    "wires": [
+      [
+        "mm_browser"
+      ]
+    ]
   },
   {
     "id": "mm_browser",
@@ -83,8 +119,13 @@
     "timer": "",
     "winHide": true,
     "oldrc": false,
-    "x": 1000, "y": 100,
-    "wires": [[], [], []]
+    "x": 1000,
+    "y": 100,
+    "wires": [
+      [],
+      [],
+      []
+    ]
   },
   {
     "id": "mm_close",
@@ -94,8 +135,13 @@
     "props": [],
     "repeat": "",
     "once": false,
-    "x": 180, "y": 280,
-    "wires": [["mm_shutdown"]]
+    "x": 180,
+    "y": 280,
+    "wires": [
+      [
+        "mm_shutdown"
+      ]
+    ]
   },
   {
     "id": "mm_shutdown",
@@ -106,8 +152,13 @@
     "ret": "obj",
     "url": "http://127.0.0.1:5000/api/shutdown",
     "reqTimeout": "3000",
-    "x": 420, "y": 280,
-    "wires": [["mm_debug"]]
+    "x": 420,
+    "y": 280,
+    "wires": [
+      [
+        "mm_debug"
+      ]
+    ]
   },
   {
     "id": "mm_debug",
@@ -116,7 +167,8 @@
     "name": "",
     "active": true,
     "complete": "payload",
-    "x": 630, "y": 280,
+    "x": 630,
+    "y": 280,
     "wires": []
   }
 ]

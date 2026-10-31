@@ -23,8 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
 
 cfg_path = BASE_DIR / "config.json"
-if not cfg_path.exists():
-    cfg_path = BASE_DIR / "config.example.json"
+if not cfg_path.exists() or "REPLACE-ME" in cfg_path.read_text(encoding="utf-8"):
+    # Δεν υπάρχει config.json ή είναι η παλιά (γερμανική) έκδοση -> πάρε το νέο πρότυπο.
+    if cfg_path.exists():
+        print("Το config.json είναι παλιό – αντικαθίσταται από το config.example.json", flush=True)
+    cfg_path.write_text((BASE_DIR / "config.example.json").read_text(encoding="utf-8"), encoding="utf-8")
 CONFIG = json.loads(cfg_path.read_text(encoding="utf-8"))
 
 USER = os.environ.get("MAGENTA_USER", "")
