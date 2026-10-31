@@ -168,6 +168,51 @@ VIDEO_PLAYING_JS = r"""
 """
 
 
+# Κάνει scroll κάτω τη σελίδα ΚΑΙ κάθε εσωτερικό scrollable container. true = τέλος.
+SCROLL_JS = r"""
+(() => {
+  let moved = false;
+  const els = [document.scrollingElement, ...document.querySelectorAll('*')].filter(e => {
+    if (!e || e.scrollHeight <= e.clientHeight + 5) return false;
+    if (e === document.scrollingElement) return true;
+    const oy = getComputedStyle(e).overflowY;
+    return oy === 'auto' || oy === 'scroll';
+  });
+  for (const e of els) {
+    const before = e.scrollTop;
+    e.scrollTop = before + Math.max(300, e.clientHeight * 0.8);
+    if (e.scrollTop !== before) moved = true;
+  }
+  return !moved;
+})()
+"""
+
+# Όλα τα "ονόματα" που φαίνονται στη σελίδα (για το αρχείο διάγνωσης).
+LABELS_JS = r"""
+(() => {
+  const rows = [];
+  const add = (kind, v, el) => {
+    v = (v || '').trim().replace(/\s+/g, ' ');
+    if (!v || v.length > 120) return;
+    rows.push(`${kind}\t${v}\t<${el.tagName.toLowerCase()} class="${el.className}">`);
+  };
+  document.querySelectorAll('img[alt]').forEach(e => add('alt', e.alt, e));
+  document.querySelectorAll('[title]').forEach(e => add('title', e.title, e));
+  document.querySelectorAll('[aria-label]').forEach(e => add('aria', e.getAttribute('aria-label'), e));
+  document.querySelectorAll('img[src]').forEach(e => add('src', e.src, e));
+  document.querySelectorAll('[style*="background"]').forEach(e => {
+    const m = (e.getAttribute('style') || '').match(/url\(["']?([^"')]+)/);
+    if (m) add('bg', m[1], e);
+  });
+  document.querySelectorAll('a[href]').forEach(e => add('href', e.getAttribute('href'), e));
+  document.querySelectorAll('body *').forEach(e => {
+    if (e.children.length === 0) add('text', e.textContent, e);
+  });
+  return rows;
+})()
+"""
+
+
 class PlayerError(RuntimeError):
     pass
 
@@ -189,6 +234,7 @@ class MagentaPlayer:
         self._ctx = None
         self._browser = None
         self._proc: subprocess.Popen | None = None
+        self._seen_labels: dict[str, None] = {}
         self._page: Page | None = None
         self._locked = False
         self._channel_url: str | None = None
@@ -543,31 +589,21 @@ class MagentaPlayer:
         page.wait_for_timeout(2500)
         return True
 
+    def _collect_labels(self, page: Page) -> None:
+        try:
+            for row in page.evaluate(LABELS_JS):
+                self._seen_labels.setdefault(row, None)
+        except PWError:
+            pass
+
     def _dump_debug(self, page: Page, tag: str) -> None:
         """Σώζει screenshot + λίστα με τα ονόματα που υπάρχουν στη σελίδα, για διάγνωση."""
         out = BASE_DIR / "debug"
         out.mkdir(exist_ok=True)
         try:
             page.screenshot(path=str(out / f"{tag}.png"))
-            labels = page.evaluate(
-                """() => {
-                  const seen = new Set(), rows = [];
-                  const add = (kind, v, el) => {
-                    v = (v || '').trim().replace(/\\s+/g, ' ');
-                    if (!v || v.length > 80 || seen.has(kind + v)) return;
-                    seen.add(kind + v);
-                    rows.push(`${kind}\\t${v}\\t<${el.tagName.toLowerCase()} class="${el.className}">`);
-                  };
-                  document.querySelectorAll('img[alt]').forEach(e => add('alt', e.alt, e));
-                  document.querySelectorAll('[title]').forEach(e => add('title', e.title, e));
-                  document.querySelectorAll('[aria-label]').forEach(e => add('aria', e.getAttribute('aria-label'), e));
-                  document.querySelectorAll('body *').forEach(e => {
-                    if (e.children.length === 0) add('text', e.textContent, e);
-                  });
-                  document.querySelectorAll('img[src]').forEach(e => add('src', e.src.split('/').pop(), e));
-                  return location.href + '\\n' + rows.join('\\n');
-                }"""
-            )
+            self._collect_labels(page)
+            labels = page.url + "\n" + "\n".join(getattr(self, "_seen_labels", {}) or page.evaluate(LABELS_JS))
             (out / f"{tag}.txt").write_text(labels, encoding="utf-8")
             print(f"[debug] αποθηκεύτηκαν {out / (tag + '.png')} και {tag}.txt", flush=True)
         except PWError as exc:
@@ -584,20 +620,41 @@ class MagentaPlayer:
             f'text="{m}"',
             f'[title*="{m}" i]', f'img[alt*="{m}" i]', f'[aria-label*="{m}" i]',
             f"text={m}",
+        ] + [
+            # Λογότυπα χωρίς κείμενο: ψάξε το όνομα μέσα στη διεύθυνση της εικόνας
+            f'img[src*="{v}" i]' for v in self._compact_variants(m)
         ]
+
+    @staticmethod
+    def _compact_variants(name: str) -> list[str]:
+        words = [w for w in "".join(c if c.isalnum() else " " for c in name).split() if w]
+        out = []
+        for sep in ("", "_", "-", "%20"):
+            v = sep.join(words).lower()
+            if v and v not in out:
+                out.append(v)
+        return out
 
     def _open_from_list(self, page: Page, ch: dict, selectors: list[str]) -> None:
         """Βρίσκει το κανάλι στη σελίδα καναλιών (με scroll αν χρειάζεται) και το πατάει."""
         self._set("loading", f"Επιλογή καναλιού {ch['name']}…")
-        for _ in range(25):
+        self._seen_labels: dict[str, None] = {}
+        page.wait_for_timeout(1500)  # να φορτώσουν τα λογότυπα
+        for _ in range(40):
             loc = self._first_visible(page, selectors, 800)
             if loc:
                 loc.scroll_into_view_if_needed()
                 loc.click()
                 page.wait_for_timeout(1500)
                 return
-            page.mouse.wheel(0, 600)
-            page.keyboard.press("PageDown")
+            self._collect_labels(page)
+            at_end = page.evaluate(SCROLL_JS)
+            if at_end:
+                page.wait_for_timeout(1000)
+                if page.evaluate(SCROLL_JS):
+                    if self._first_visible(page, selectors, 1000):
+                        continue
+                    break
         self._dump_debug(page, "channels")
         raise PlayerError(
             f"Δεν βρέθηκε το '{ch['name']}' στη λίστα καναλιών (στοιχεία στον φάκελο debug) – βάλε σωστό \"match\" ή \"selector\" στο config.json"
