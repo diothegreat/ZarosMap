@@ -1,9 +1,7 @@
 @echo off
-REM Ξεκινά τον Flask server του Magenta Monitor (αν δεν τρέχει ήδη).
+REM Ξεκινά τον Flask server του Magenta Monitor.
+REM Το παράθυρο μένει ανοιχτό (ελαχιστοποιημένο) ώστε να φαίνονται τα μηνύματα/σφάλματα.
 cd /d "%~dp0"
-if exist ".venv\Scripts\python.exe" (
-    set PY=.venv\Scripts\python.exe
-) else (
-    set PY=python
-)
-start "Magenta Monitor Server" /min %PY% app.py
+set "PY=python"
+if exist "%~dp0.venv\Scripts\python.exe" set "PY=%~dp0.venv\Scripts\python.exe"
+start "Magenta Monitor Server" /min cmd /k ""%PY%" "%~dp0app.py""
