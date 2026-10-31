@@ -187,6 +187,18 @@ SCROLL_JS = r"""
 })()
 """
 
+# Βρίσκει τη θέση του καναλιού στη λίστα (aria-label "51 από 104 Novasports1HD").
+FIND_TILE_JS = r"""
+(wanted) => {
+  const norm = s => {
+    s = (s || '').replace(/^\s*\d+\s+(από|of)\s+\d+\s+/i, '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+    return s.endsWith('hd') ? s.slice(0, -2) : s;
+  };
+  const tiles = [...document.querySelectorAll('.channels-channel')];
+  return tiles.findIndex(t => wanted.includes(norm(t.getAttribute('aria-label'))));
+}
+"""
+
 # Όλα τα "ονόματα" που φαίνονται στη σελίδα (για το αρχείο διάγνωσης).
 LABELS_JS = r"""
 (() => {
@@ -686,6 +698,11 @@ class MagentaPlayer:
         ]
 
     @staticmethod
+    def _norm(name: str) -> str:
+        n = "".join(c for c in (name or "").lower() if c.isalnum())
+        return n[:-2] if n.endswith("hd") else n
+
+    @staticmethod
     def _compact_variants(name: str) -> list[str]:
         words = [w for w in "".join(c if c.isalnum() else " " for c in name).split() if w]
         out = []
@@ -700,7 +717,17 @@ class MagentaPlayer:
         self._set("loading", f"Επιλογή καναλιού {ch['name']}…")
         self._seen_labels: dict[str, None] = {}
         page.wait_for_timeout(1500)  # να φορτώσουν τα λογότυπα
+        wanted = [self._norm(ch.get("match", "")), self._norm(ch["name"])]
         for _ in range(40):
+            # 1) Magenta TV GR: σύγκριση με το aria-label κάθε καναλιού, ανεξάρτητα από
+            #    κενά/κεφαλαία/"HD" ("Novasports 1" == "Novasports1HD").
+            idx = page.evaluate(FIND_TILE_JS, [w for w in wanted if w])
+            if idx is not None and idx >= 0:
+                tile = page.locator(".channels-channel").nth(idx)
+                tile.scroll_into_view_if_needed()
+                tile.click()
+                page.wait_for_timeout(1500)
+                return
             loc = self._first_visible(page, selectors, 800)
             if loc:
                 loc.scroll_into_view_if_needed()
