@@ -4,3 +4,4 @@ chrome-profile/
 __pycache__/
 *.log
 debug/
+session.json

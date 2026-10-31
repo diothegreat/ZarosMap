@@ -14,6 +14,7 @@ API δεν είναι thread-safe), και ο Flask στέλνει εντολέ�
 
 from __future__ import annotations
 
+import json
 import os
 import queue
 import shutil
@@ -29,7 +30,10 @@ from playwright.sync_api import Error as PWError
 from playwright.sync_api import Page, sync_playwright
 
 BASE_DIR = Path(__file__).resolve().parent
-PROFILE_DIR = BASE_DIR / "chrome-profile"  # κρατάει cookies -> σπάνια ξανά login
+PROFILE_DIR = BASE_DIR / "chrome-profile"
+# Το Magenta κρατά τη σύνδεση σε session cookie που χάνεται όταν κλείνει το Chrome.
+# Το σώζουμε εδώ και το ξαναβάζουμε στο επόμενο άνοιγμα (=> δεν χρειάζεται ξανά login).
+SESSION_FILE = BASE_DIR / "session.json"
 
 # --------------------------------------------------------------------------- #
 # JavaScript που "κλειδώνει" τη σελίδα. Είναι idempotent (ασφαλές να ξανατρέξει).
@@ -416,6 +420,7 @@ class MagentaPlayer:
         self._browser = self._pw.chromium.connect_over_cdp(endpoint)
         self._ctx = self._browser.contexts[0]
         self._ctx.set_default_timeout(self.cfg["timeouts_ms"]["page"])
+        self._load_session()
         for _ in range(40):
             pages = [p for p in self._ctx.pages if not p.url.startswith(("devtools:", "chrome-extension:"))]
             if pages:
@@ -455,6 +460,10 @@ class MagentaPlayer:
     def _close_browser(self) -> None:
         try:
             if getattr(self, "_browser", None) is not None:
+                try:
+                    self._browser.new_browser_cdp_session().send("Browser.close")  # κανονικό κλείσιμο
+                except PWError:
+                    pass
                 self._browser.close()
         except PWError:
             pass
@@ -545,6 +554,50 @@ class MagentaPlayer:
             self._dump_debug(page, "login")
             raise PlayerError("Η σύνδεση απέτυχε – έλεγξε email/κωδικό στο .env (στοιχεία: debug/login.png)")
 
+    def _save_session(self) -> None:
+        try:
+            cookies = self._ctx.cookies()
+            SESSION_FILE.write_text(json.dumps(cookies), encoding="utf-8")
+        except (PWError, OSError) as exc:
+            print(f"[session] αποτυχία αποθήκευσης: {exc}", flush=True)
+
+    def _load_session(self) -> None:
+        if not SESSION_FILE.exists():
+            return
+        try:
+            cookies = json.loads(SESSION_FILE.read_text(encoding="utf-8"))
+            self._ctx.add_cookies(cookies)
+            print(f"[session] φορτώθηκαν {len(cookies)} cookies", flush=True)
+        except (PWError, OSError, ValueError) as exc:
+            print(f"[session] αποτυχία φόρτωσης: {exc}", flush=True)
+
+    def _login_or_manual(self, page: Page) -> None:
+        """Αυτόματο login· αν δεν πετύχει, σε αφήνει να συνδεθείς ΜΙΑ φορά με το χέρι."""
+        try:
+            self._login(page)
+            if self._is_logged_in(page, 8000):
+                self._save_session()
+                return
+        except PlayerError as exc:
+            print(f"[login] αυτόματο login απέτυχε: {exc}", flush=True)
+        self._manual_login(page)
+
+    def _manual_login(self, page: Page) -> None:
+        self._show_window()
+        self._set("login", "Συνδέσου ΜΙΑ φορά χειροκίνητα στο παράθυρο του Chrome που άνοιξε "
+                           "(και διάλεξε προφίλ). Έχεις 3 λεπτά – μετά θα το θυμάται.")
+        deadline = time.time() + 180
+        while time.time() < deadline:
+            if self._is_logged_in(page, 1000):
+                page.wait_for_timeout(1500)
+                self._save_session()
+                if self._hide:
+                    self._set_window({"left": -32000, "top": -32000})
+                self._set("loading", "Συνδέθηκες! Συνεχίζω…")
+                return
+            page.wait_for_timeout(1000)
+        raise PlayerError("Δεν έγινε σύνδεση μέσα σε 3 λεπτά")
+
     def _is_logged_in(self, page: Page, timeout_ms: int) -> bool:
         return self._first_visible(page, self.cfg["selectors"]["logged_in"], timeout_ms) is not None
 
@@ -603,14 +656,14 @@ class MagentaPlayer:
         # "Έτοιμη σελίδα" = εμφανίστηκαν κανάλια ή τουλάχιστον το μενού της εφαρμογής.
         ready = [] if direct else tile_sel + self.cfg["selectors"]["menu"]
         if self._wait_video_or_login(page, 20000, ready) == "login":
-            self._login(page)
+            self._login_or_manual(page)
             self._after_login(page, target, ready)
 
         self._handle_profile(page, target, ready)
 
         if not direct and not self._is_logged_in(page, 6000):
             # Guest mode (π.χ. έληξε η σύνδεση): άδεια λίστα καναλιών, χωρίς avatar.
-            self._login(page)
+            self._login_or_manual(page)
             self._after_login(page, target, ready)
             self._handle_profile(page, target, ready)
 
@@ -626,6 +679,7 @@ class MagentaPlayer:
                 raise PlayerError("Το video δεν ξεκίνησε. Έλεγξε το κανάλι στο config.json και τα στοιχεία σύνδεσης.")
 
         self._channel_url = page.url
+        self._save_session()
         self._lock_page()
         self._show_window()
         self._set("playing", f"Παίζει: {ch['name']}")
