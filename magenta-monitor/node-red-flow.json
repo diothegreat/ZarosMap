@@ -1,0 +1,122 @@
+[
+  {
+    "id": "mm_tab",
+    "type": "tab",
+    "label": "Magenta Monitor",
+    "disabled": false,
+    "info": "Πάτα το κουμπί του 'Άνοιγμα Magenta Monitor'. Αν ο server δεν τρέχει, ξεκινάει και ανοίγει ο browser στο http://127.0.0.1:5000.\nΆλλαξε τη διαδρομή στο exec node 'Εκκίνηση server' αν έβαλες τον φάκελο αλλού."
+  },
+  {
+    "id": "mm_open",
+    "type": "inject",
+    "z": "mm_tab",
+    "name": "▶ Άνοιγμα Magenta Monitor",
+    "props": [],
+    "repeat": "",
+    "once": false,
+    "x": 170, "y": 100,
+    "wires": [["mm_health"]]
+  },
+  {
+    "id": "mm_health",
+    "type": "http request",
+    "z": "mm_tab",
+    "name": "Τρέχει ο server;",
+    "method": "GET",
+    "ret": "obj",
+    "url": "http://127.0.0.1:5000/api/health",
+    "reqTimeout": "1500",
+    "x": 400, "y": 100,
+    "wires": [["mm_switch"]]
+  },
+  {
+    "id": "mm_switch",
+    "type": "switch",
+    "z": "mm_tab",
+    "name": "statusCode == 200 ?",
+    "property": "statusCode",
+    "propertyType": "msg",
+    "rules": [
+      { "t": "eq", "v": "200", "vt": "num" },
+      { "t": "else" }
+    ],
+    "checkall": "false",
+    "outputs": 2,
+    "x": 610, "y": 100,
+    "wires": [["mm_browser"], ["mm_start"]]
+  },
+  {
+    "id": "mm_start",
+    "type": "exec",
+    "z": "mm_tab",
+    "name": "Εκκίνηση server",
+    "command": "C:\\magenta-monitor\\start_server.bat",
+    "addpay": "",
+    "append": "",
+    "useSpawn": "false",
+    "timer": "",
+    "winHide": true,
+    "oldrc": false,
+    "x": 620, "y": 180,
+    "wires": [["mm_delay"], [], []]
+  },
+  {
+    "id": "mm_delay",
+    "type": "delay",
+    "z": "mm_tab",
+    "name": "Αναμονή 4s",
+    "pauseType": "delay",
+    "timeout": "4",
+    "timeoutUnits": "seconds",
+    "x": 810, "y": 180,
+    "wires": [["mm_browser"]]
+  },
+  {
+    "id": "mm_browser",
+    "type": "exec",
+    "z": "mm_tab",
+    "name": "Άνοιγμα browser",
+    "command": "cmd /c start \"\" http://127.0.0.1:5000",
+    "addpay": "",
+    "append": "",
+    "useSpawn": "false",
+    "timer": "",
+    "winHide": true,
+    "oldrc": false,
+    "x": 1000, "y": 100,
+    "wires": [[], [], []]
+  },
+  {
+    "id": "mm_close",
+    "type": "inject",
+    "z": "mm_tab",
+    "name": "■ Κλείσιμο (Chrome + server)",
+    "props": [],
+    "repeat": "",
+    "once": false,
+    "x": 180, "y": 280,
+    "wires": [["mm_shutdown"]]
+  },
+  {
+    "id": "mm_shutdown",
+    "type": "http request",
+    "z": "mm_tab",
+    "name": "POST /api/shutdown",
+    "method": "POST",
+    "ret": "obj",
+    "url": "http://127.0.0.1:5000/api/shutdown",
+    "reqTimeout": "3000",
+    "x": 420, "y": 280,
+    "wires": [["mm_debug"]]
+  },
+  {
+    "id": "mm_debug",
+    "type": "debug",
+    "z": "mm_tab",
+    "name": "",
+    "active": true,
+    "complete": "payload",
+    "x": 630, "y": 280,
+    "wires": []
+  }
+]

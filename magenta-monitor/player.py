@@ -1,0 +1,476 @@
+"""
+Έλεγχος του Google Chrome μέσω Playwright.
+
+Όλες οι κλήσεις Playwright γίνονται σε ΕΝΑ δικό τους thread (το Playwright sync
+API δεν είναι thread-safe), και ο Flask στέλνει εντολές μέσω ουράς.
+
+Ροή:  play(channel) -> άνοιγμα Chrome -> URL καναλιού -> (αν χρειαστεί) login
+      -> ξανά URL καναλιού -> αναμονή για <video> -> "κλείδωμα" της σελίδας.
+
+"Κλείδωμα" = ένα διάφανο layer πάνω από όλη τη σελίδα που τρώει όλα τα clicks,
+το scroll, το δεξί κλικ και τα πλήκτρα. Επιτρέπονται ΜΟΝΟ: ήχος (mute / ένταση)
+και πλήρης οθόνη. Ένας watchdog γυρίζει πίσω στο κανάλι αν η σελίδα φύγει.
+"""
+
+from __future__ import annotations
+
+import queue
+import threading
+import time
+from pathlib import Path
+from typing import Any
+
+from playwright.sync_api import Error as PWError
+from playwright.sync_api import Page, sync_playwright
+
+BASE_DIR = Path(__file__).resolve().parent
+PROFILE_DIR = BASE_DIR / "chrome-profile"  # κρατάει cookies -> σπάνια ξανά login
+
+# --------------------------------------------------------------------------- #
+# JavaScript που "κλειδώνει" τη σελίδα. Είναι idempotent (ασφαλές να ξανατρέξει).
+# --------------------------------------------------------------------------- #
+LOCK_JS = r"""
+(() => {
+  if (document.getElementById('mm-shield')) return true;
+
+  const pickVideo = () => {
+    const vids = [...document.querySelectorAll('video')];
+    if (!vids.length) return null;
+    return vids.sort((a, b) =>
+      (b.clientWidth * b.clientHeight) - (a.clientWidth * a.clientHeight))[0];
+  };
+
+  const style = document.createElement('style');
+  style.id = 'mm-style';
+  style.textContent = `
+    html, body { overflow: hidden !important; background: #000 !important; }
+    video.mm-video {
+      position: fixed !important; inset: 0 !important;
+      width: 100vw !important; height: 100vh !important;
+      max-width: none !important; max-height: none !important;
+      object-fit: contain !important; background: #000 !important;
+      z-index: 2147483646 !important; transform: none !important;
+    }
+    #mm-shield {
+      position: fixed; inset: 0; z-index: 2147483647;
+      background: transparent; cursor: none;
+    }
+    #mm-shield.mm-active { cursor: default; }
+    #mm-bar {
+      position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+      display: flex; gap: 12px; align-items: center;
+      padding: 10px 16px; border-radius: 12px;
+      background: rgba(0,0,0,.65); color: #fff;
+      font: 14px/1 system-ui, sans-serif;
+      opacity: 0; transition: opacity .25s;
+    }
+    #mm-shield.mm-active #mm-bar { opacity: 1; }
+    #mm-bar button {
+      all: unset; cursor: pointer; padding: 6px 10px; border-radius: 8px;
+      background: rgba(255,255,255,.15); font-size: 16px;
+    }
+    #mm-bar button:hover { background: rgba(255,255,255,.3); }
+    #mm-bar input[type=range] { width: 140px; cursor: pointer; }
+    #mm-title { opacity: .8; padding-right: 6px; }
+  `;
+  document.documentElement.appendChild(style);
+
+  const shield = document.createElement('div');
+  shield.id = 'mm-shield';
+  shield.innerHTML = `
+    <div id="mm-bar">
+      <span id="mm-title"></span>
+      <button id="mm-mute" title="Ήχος (M)">🔊</button>
+      <input id="mm-vol" type="range" min="0" max="100" step="1" title="Ένταση">
+      <button id="mm-fs" title="Πλήρης οθόνη (F)">⛶</button>
+    </div>`;
+  document.documentElement.appendChild(shield);
+  shield.querySelector('#mm-title').textContent = window.__mmTitle || '';
+
+  const muteBtn = shield.querySelector('#mm-mute');
+  const vol = shield.querySelector('#mm-vol');
+  const fsBtn = shield.querySelector('#mm-fs');
+
+  const sync = () => {
+    const v = pickVideo();
+    if (!v) return;
+    if (!v.classList.contains('mm-video')) v.classList.add('mm-video');
+    v.controls = false;
+    muteBtn.textContent = (v.muted || v.volume === 0) ? '🔇' : '🔊';
+    if (document.activeElement !== vol) vol.value = Math.round(v.volume * 100);
+  };
+  window.__mmSync = sync;
+  setInterval(sync, 500);
+  sync();
+
+  const toggleMute = () => { const v = pickVideo(); if (v) { v.muted = !v.muted; sync(); } };
+  const toggleFs = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else document.documentElement.requestFullscreen().catch(() => {});
+  };
+
+  muteBtn.addEventListener('click', e => { e.stopPropagation(); toggleMute(); });
+  fsBtn.addEventListener('click', e => { e.stopPropagation(); toggleFs(); });
+  vol.addEventListener('input', e => {
+    e.stopPropagation();
+    const v = pickVideo();
+    if (v) { v.volume = vol.value / 100; v.muted = (v.volume === 0); sync(); }
+  });
+  shield.addEventListener('dblclick', e => { if (e.target === shield) toggleFs(); });
+
+  // Εμφάνιση μπάρας όταν κουνιέται το ποντίκι
+  let hideT;
+  shield.addEventListener('mousemove', () => {
+    shield.classList.add('mm-active');
+    clearTimeout(hideT);
+    hideT = setTimeout(() => shield.classList.remove('mm-active'), 2500);
+  });
+
+  // Μπλοκάρισμα όλων των υπόλοιπων αλληλεπιδράσεων
+  const block = e => {
+    if (e.target && e.target.closest && e.target.closest('#mm-bar')) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+  };
+  ['click','mousedown','mouseup','pointerdown','pointerup','auxclick',
+   'contextmenu','wheel','touchstart','touchend','dragstart','selectstart']
+    .forEach(t => window.addEventListener(t, block, { capture: true, passive: false }));
+
+  // Πληκτρολόγιο: επιτρέπονται μόνο M (mute), F (fullscreen), ↑/↓ (ένταση), Esc
+  const keys = e => {
+    const k = e.key;
+    if (k === 'Escape' || k === 'F11') return;           // έξοδος από πλήρη οθόνη
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (e.type !== 'keydown' || e.repeat && !(k === 'ArrowUp' || k === 'ArrowDown')) return;
+    const v = pickVideo();
+    if (k === 'm' || k === 'M') toggleMute();
+    else if (k === 'f' || k === 'F') toggleFs();
+    else if (v && k === 'ArrowUp')   { v.muted = false; v.volume = Math.min(1, v.volume + .05); sync(); }
+    else if (v && k === 'ArrowDown') { v.volume = Math.max(0, v.volume - .05); sync(); }
+  };
+  ['keydown','keyup','keypress'].forEach(t =>
+    window.addEventListener(t, keys, { capture: true }));
+
+  return true;
+})()
+"""
+
+VIDEO_PLAYING_JS = r"""
+(() => {
+  const v = [...document.querySelectorAll('video')]
+    .find(v => v.readyState >= 2 && v.clientWidth > 100);
+  return !!v;
+})()
+"""
+
+
+class PlayerError(RuntimeError):
+    pass
+
+
+class MagentaPlayer:
+    """Τρέχει σε δικό του thread. Ο Flask καλεί τις public μεθόδους."""
+
+    def __init__(self, config: dict, username: str, password: str):
+        self.cfg = config
+        self.username = username
+        self.password = password
+        self.channels = {c["id"]: c for c in config["channels"]}
+
+        self._q: "queue.Queue[tuple[str, Any, queue.Queue | None]]" = queue.Queue()
+        self._lock = threading.Lock()
+        self._state = {"status": "idle", "channel": None, "message": "Αναμονή επιλογής καναλιού"}
+
+        self._pw = None
+        self._ctx = None
+        self._page: Page | None = None
+        self._locked = False
+        self._channel_url: str | None = None
+        self._current: dict | None = None
+
+        self._thread = threading.Thread(target=self._run, name="playwright", daemon=True)
+        self._thread.start()
+
+    # ------------------------------------------------------------------ API --
+    def state(self) -> dict:
+        with self._lock:
+            return dict(self._state)
+
+    def play(self, channel_id: str) -> None:
+        if channel_id not in self.channels:
+            raise PlayerError(f"Άγνωστο κανάλι: {channel_id}")
+        self._q.put(("play", channel_id, None))
+
+    def set_muted(self, muted: bool) -> dict:
+        return self._call("mute", muted)
+
+    def set_volume(self, volume: int) -> dict:
+        return self._call("volume", max(0, min(100, int(volume))))
+
+    def toggle_fullscreen(self) -> dict:
+        return self._call("fullscreen", None)
+
+    def stop(self) -> dict:
+        return self._call("stop", None, timeout=20)
+
+    # ------------------------------------------------------------ internals --
+    def _call(self, cmd: str, arg: Any, timeout: float = 10) -> dict:
+        reply: queue.Queue = queue.Queue()
+        self._q.put((cmd, arg, reply))
+        try:
+            ok, data = reply.get(timeout=timeout)
+        except queue.Empty:
+            return {"ok": False, "error": "timeout (το κανάλι μάλλον ακόμα φορτώνει)"}
+        return {"ok": ok, **({"data": data} if ok else {"error": data})}
+
+    def _set(self, status: str, message: str, channel: str | None = ...) -> None:  # type: ignore[assignment]
+        with self._lock:
+            self._state["status"] = status
+            self._state["message"] = message
+            if channel is not ...:
+                self._state["channel"] = channel
+        print(f"[player] {status}: {message}", flush=True)
+
+    def _run(self) -> None:
+        self._pw = sync_playwright().start()
+        while True:
+            try:
+                cmd, arg, reply = self._q.get(timeout=1.0)
+            except queue.Empty:
+                self._watchdog()
+                continue
+            try:
+                result = getattr(self, f"_do_{cmd}")(arg)
+                if reply:
+                    reply.put((True, result))
+            except Exception as exc:  # noqa: BLE001
+                if reply:
+                    reply.put((False, str(exc)))
+                if cmd == "play":
+                    self._locked = False
+                    self._set("error", f"Σφάλμα: {exc}")
+
+    # ---------------------------------------------------------- browser ----
+    def _ensure_browser(self) -> Page:
+        if self._ctx is not None and self._page is not None and not self._page.is_closed():
+            return self._page
+        self._close_browser()
+        w, h = self.cfg.get("window_size", [1280, 720])
+        PROFILE_DIR.mkdir(exist_ok=True)
+        self._ctx = self._pw.chromium.launch_persistent_context(
+            user_data_dir=str(PROFILE_DIR),
+            channel=self.cfg.get("chrome_channel", "chrome"),  # πραγματικό Chrome (Widevine)
+            headless=False,
+            no_viewport=True,
+            args=[
+                "--app=about:blank",                       # χωρίς γραμμή διευθύνσεων/tabs
+                f"--window-size={w},{h}",
+                "--autoplay-policy=no-user-gesture-required",
+                "--disable-blink-features=AutomationControlled",
+                "--disable-infobars",
+                "--disable-session-crashed-bubble",
+                "--no-first-run",
+            ],
+            ignore_default_args=["--enable-automation", "--mute-audio"],
+        )
+        self._ctx.set_default_timeout(self.cfg["timeouts_ms"]["page"])
+        self._page = self._ctx.pages[0] if self._ctx.pages else self._ctx.new_page()
+        # Αν κάτι ανοίξει νέο παράθυρο/tab, το κλείνουμε.
+        self._ctx.on("page", lambda p: p.close() if p is not self._page else None)
+        return self._page
+
+    def _close_browser(self) -> None:
+        try:
+            if self._ctx is not None:
+                self._ctx.close()
+        except PWError:
+            pass
+        self._ctx = None
+        self._page = None
+        self._locked = False
+
+    # ---------------------------------------------------------- helpers ----
+    def _first_visible(self, page: Page, selectors: list[str], timeout_ms: int):
+        deadline = time.time() + timeout_ms / 1000
+        while time.time() < deadline:
+            for sel in selectors:
+                try:
+                    loc = page.locator(sel).first
+                    if loc.is_visible():
+                        return loc
+                except PWError:
+                    pass
+            page.wait_for_timeout(250)
+        return None
+
+    def _accept_cookies(self, page: Page) -> None:
+        loc = self._first_visible(page, self.cfg["selectors"]["cookie_accept"], 3000)
+        if loc:
+            loc.click()
+            page.wait_for_timeout(500)
+
+    def _video_playing(self, page: Page) -> bool:
+        try:
+            return bool(page.evaluate(VIDEO_PLAYING_JS))
+        except PWError:
+            return False
+
+    def _login(self, page: Page) -> None:
+        s = self.cfg["selectors"]
+        t = self.cfg["timeouts_ms"]["element"]
+        self._set("login", "Σύνδεση με τους κωδικούς σου…")
+
+        user = self._first_visible(page, s["username"], 1500)
+        if not user:
+            entry = self._first_visible(page, s["login_entry"], t)
+            if entry:
+                entry.click()
+                page.wait_for_load_state("domcontentloaded")
+            self._accept_cookies(page)
+            user = self._first_visible(page, s["username"], t)
+
+        if user:
+            user.fill(self.username)
+            # Η σελίδα login της Telekom ζητά πρώτα username, μετά password.
+            pwd = self._first_visible(page, s["password"], 1000)
+            if not pwd:
+                nxt = self._first_visible(page, s["username_next"], t)
+                if nxt:
+                    nxt.click()
+                pwd = self._first_visible(page, s["password"], t)
+        else:
+            pwd = self._first_visible(page, s["password"], 1000)
+
+        if not pwd:
+            raise PlayerError("Δεν βρέθηκε πεδίο κωδικού – έλεγξε τους selectors στο config.json")
+        pwd.fill(self.password)
+        btn = self._first_visible(page, s["password_submit"], t)
+        if btn:
+            btn.click()
+        else:
+            pwd.press("Enter")
+        page.wait_for_load_state("domcontentloaded")
+        page.wait_for_timeout(3000)
+
+    def _wait_for_video(self, page: Page, timeout_ms: int) -> bool:
+        deadline = time.time() + timeout_ms / 1000
+        while time.time() < deadline:
+            if self._video_playing(page):
+                return True
+            page.wait_for_timeout(500)
+        return False
+
+    def _wait_video_or_login(self, page: Page, timeout_ms: int) -> str:
+        """Περιμένει μέχρι να εμφανιστεί είτε video ("video") είτε φόρμα/κουμπί login ("login")."""
+        s = self.cfg["selectors"]
+        login_sel = s["username"] + s["password"] + s["login_entry"]
+        deadline = time.time() + timeout_ms / 1000
+        while time.time() < deadline:
+            if self._video_playing(page):
+                return "video"
+            url = page.url.lower()
+            if "login" in url or "idm.telekom" in url or "accounts." in url:
+                return "login"
+            if self._first_visible(page, login_sel, 300) is not None:
+                return "login"
+            page.wait_for_timeout(500)
+        return "unknown"
+
+    def _lock_page(self) -> None:
+        assert self._page is not None
+        title = (self._current or {}).get("name", "")
+        self._page.evaluate(f"window.__mmTitle = {title!r};")
+        self._page.evaluate(LOCK_JS)
+        self._locked = True
+
+    # --------------------------------------------------------- commands ----
+    def _do_play(self, channel_id: str) -> None:
+        ch = self.channels[channel_id]
+        self._current = ch
+        self._locked = False
+        self._set("starting", f"Άνοιγμα Chrome για {ch['name']}…", channel=channel_id)
+        page = self._ensure_browser()
+        page.bring_to_front()
+
+        self._set("loading", f"Φόρτωση {ch['name']}…")
+        page.goto(ch["url"], wait_until="domcontentloaded")
+        self._accept_cookies(page)
+
+        if self._wait_video_or_login(page, 20000) == "login":
+            self._login(page)
+            self._set("loading", f"Μετάβαση στο {ch['name']}…")
+            page.goto(ch["url"], wait_until="domcontentloaded")
+            self._accept_cookies(page)
+
+        self._set("loading", "Αναμονή για το video…")
+        if not self._wait_for_video(page, self.cfg["timeouts_ms"]["video"]):
+            raise PlayerError("Το video δεν ξεκίνησε. Έλεγξε το URL καναλιού και τα στοιχεία σύνδεσης.")
+
+        self._channel_url = page.url
+        self._lock_page()
+        self._set("playing", f"Παίζει: {ch['name']}")
+
+    def _do_mute(self, muted: bool) -> bool:
+        self._require_playing()
+        return self._page.evaluate(
+            "m => { const v=[...document.querySelectorAll('video')].find(v=>v.readyState>=2);"
+            " if(!v) return null; v.muted=m; window.__mmSync&&__mmSync(); return v.muted; }",
+            bool(muted),
+        )
+
+    def _do_volume(self, vol: int) -> int:
+        self._require_playing()
+        return self._page.evaluate(
+            "x => { const v=[...document.querySelectorAll('video')].find(v=>v.readyState>=2);"
+            " if(!v) return null; v.volume=x/100; v.muted=(x===0); window.__mmSync&&__mmSync();"
+            " return Math.round(v.volume*100); }",
+            vol,
+        )
+
+    def _do_fullscreen(self, _arg: Any) -> str:
+        """Πλήρης οθόνη του παραθύρου Chrome μέσω CDP (δουλεύει και από το web UI)."""
+        self._require_playing()
+        cdp = self._ctx.new_cdp_session(self._page)
+        try:
+            win = cdp.send("Browser.getWindowForTarget")
+            wid = win["windowId"]
+            cur = cdp.send("Browser.getWindowBounds", {"windowId": wid})["bounds"]["windowState"]
+            new = "normal" if cur == "fullscreen" else "fullscreen"
+            if new == "fullscreen" and cur != "normal":
+                cdp.send("Browser.setWindowBounds", {"windowId": wid, "bounds": {"windowState": "normal"}})
+            cdp.send("Browser.setWindowBounds", {"windowId": wid, "bounds": {"windowState": new}})
+            return new
+        finally:
+            cdp.detach()
+
+    def _do_stop(self, _arg: Any) -> None:
+        self._close_browser()
+        self._current = None
+        self._channel_url = None
+        self._set("idle", "Σταμάτησε", channel=None)
+
+    def _require_playing(self) -> None:
+        if not self._locked or self._page is None or self._page.is_closed():
+            raise PlayerError("Δεν παίζει κανάλι αυτή τη στιγμή")
+
+    # --------------------------------------------------------- watchdog ----
+    def _watchdog(self) -> None:
+        """Κάθε ~1s: αν η σελίδα ξεκλειδώθηκε ή έφυγε από το κανάλι, το διορθώνει."""
+        if not self._locked:
+            return
+        page = self._page
+        if page is None or page.is_closed():
+            self._locked = False
+            self._ctx = None
+            self._set("idle", "Το παράθυρο έκλεισε", channel=None)
+            return
+        try:
+            if self._channel_url and page.url.split("#")[0] != self._channel_url.split("#")[0]:
+                self._set("loading", "Επιστροφή στο κανάλι…")
+                page.goto(self._channel_url, wait_until="domcontentloaded")
+                self._wait_for_video(page, self.cfg["timeouts_ms"]["video"])
+                self._set("playing", f"Παίζει: {self._current['name']}")
+            if not page.evaluate("!!document.getElementById('mm-shield')"):
+                if self._video_playing(page):
+                    self._lock_page()
+        except PWError as exc:
+            print(f"[watchdog] {exc}", flush=True)

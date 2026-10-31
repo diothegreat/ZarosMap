@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magenta Monitor</title>
+<style>
+  :root { --mg:#e20074; --bg:#111; --card:#1c1c1c; --txt:#eee; --mut:#999; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center;
+         background:var(--bg); color:var(--txt); font:16px/1.4 system-ui, sans-serif; }
+  .card { width:min(440px, 92vw); background:var(--card); border-radius:16px;
+          padding:28px; box-shadow:0 10px 40px rgba(0,0,0,.5); }
+  h1 { margin:0 0 4px; font-size:22px; } h1 span { color:var(--mg); }
+  p.sub { margin:0 0 22px; color:var(--mut); font-size:14px; }
+  label { display:block; margin-bottom:6px; color:var(--mut); font-size:14px; }
+  select, button { width:100%; padding:12px; border-radius:10px; border:0; font-size:16px; }
+  select { background:#2a2a2a; color:var(--txt); margin-bottom:14px; }
+  button { background:var(--mg); color:#fff; cursor:pointer; font-weight:600; }
+  button:disabled { opacity:.5; cursor:default; }
+  .row { display:flex; gap:10px; margin-top:12px; align-items:center; }
+  .row button { background:#333; font-weight:500; }
+  .row input[type=range] { flex:1; }
+  #status { margin-top:18px; padding:10px 12px; border-radius:10px; background:#262626;
+            font-size:14px; min-height:42px; }
+  #status.playing { border-left:4px solid #2ecc71; }
+  #status.error   { border-left:4px solid #e74c3c; }
+  #status.loading, #status.login, #status.starting { border-left:4px solid #f1c40f; }
+  #controls { display:none; }
+  #controls.on { display:block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1><span>Magenta</span> Monitor</h1>
+  <p class="sub">Διάλεξε κανάλι. Θα ανοίξει παράθυρο Chrome μόνο για παρακολούθηση.</p>
+
+  <label for="channel">Κανάλι</label>
+  <select id="channel">
+    {% for c in channels %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+  </select>
+  <button id="go">▶ Σύνδεση &amp; Προβολή</button>
+
+  <div id="controls">
+    <div class="row">
+      <button id="mute" style="flex:0 0 56px">🔊</button>
+      <input id="vol" type="range" min="0" max="100" value="80" title="Ένταση">
+      <button id="fs" style="flex:0 0 56px" title="Πλήρης οθόνη">⛶</button>
+    </div>
+    <div class="row"><button id="stop">■ Τερματισμός</button></div>
+  </div>
+
+  <div id="status">Σύνδεση με server…</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const api = (path, body) => fetch(path, {
+  method: body === undefined ? 'GET' : 'POST',
+  headers: {'Content-Type': 'application/json'},
+  body: body === undefined ? undefined : JSON.stringify(body),
+}).then(r => r.json());
+
+let muted = false;
+
+$('go').onclick = async () => {
+  $('go').disabled = true;
+  const r = await api('/api/play', {channel: $('channel').value});
+  if (!r.ok) { $('status').textContent = r.error; $('go').disabled = false; }
+};
+$('mute').onclick = async () => {
+  const r = await api('/api/mute', {muted: !muted});
+  if (r.ok) { muted = !!r.data; $('mute').textContent = muted ? '🔇' : '🔊'; }
+};
+let volT;
+$('vol').oninput = () => {
+  clearTimeout(volT);
+  volT = setTimeout(() => api('/api/volume', {volume: +$('vol').value}), 120);
+};
+$('fs').onclick = () => api('/api/fullscreen', {});
+$('stop').onclick = () => api('/api/stop', {});
+
+async function poll() {
+  try {
+    const s = await api('/api/status');
+    $('status').textContent = s.message;
+    $('status').className = s.status;
+    const busy = ['starting','loading','login'].includes(s.status);
+    $('go').disabled = busy;
+    // Μόλις ξεκινήσει η προβολή, το κανάλι "κλειδώνει" – για αλλαγή: Τερματισμός.
+    const active = busy || s.status === 'playing';
+    $('channel').disabled = active;
+    $('go').style.display = active ? 'none' : '';
+    $('controls').classList.toggle('on', s.status === 'playing');
+    if (s.channel) $('channel').value = s.channel;
+  } catch { $('status').textContent = 'Ο server δεν απαντά'; $('status').className = 'error'; }
+  setTimeout(poll, 1000);
+}
+poll();
+</script>
+</body>
+</html>
