@@ -281,6 +281,11 @@ DEFAULT_SELECTORS: dict[str, list[str]] = {
     # Υπάρχει μόνο όταν είσαι συνδεδεμένος (avatar προφίλ πάνω δεξιά)
     "logged_in": ["img.nav-avatar", ".ic2-notifications"],
     "channel_tile": [".channels-channel"],
+    # Οθόνη "Who's watching? / Ποιος βλέπει;" (είσαι συνδεδεμένος, λείπει μόνο το προφίλ)
+    "profile_screen": [
+        "text=/who.?s watching/i", "text=/ποιος βλέπει/i",
+        "button:has-text('Manage Profiles')", "button:has-text('Διαχείριση προφίλ')",
+    ],
 }
 
 
@@ -656,6 +661,13 @@ class MagentaPlayer:
                            "(και διάλεξε προφίλ). Έχεις 3 λεπτά – μετά θα το θυμάται.")
         deadline = time.time() + 180
         while time.time() < deadline:
+            if self._on_profile_screen(page, 500) and (self.cfg.get("profile") or "").strip():
+                # Συνδέθηκες – το προφίλ το διαλέγω εγώ, στο παρασκήνιο
+                if self._hide:
+                    self._set_window({"left": -32000, "top": -32000})
+                self._save_session()
+                self._set("loading", "Συνδέθηκες! Συνεχίζω…")
+                return
             if self._is_logged_in(page, 1000):
                 page.wait_for_timeout(1500)
                 self._save_session()
@@ -667,7 +679,11 @@ class MagentaPlayer:
         raise PlayerError("Δεν έγινε σύνδεση μέσα σε 3 λεπτά")
 
     def _is_logged_in(self, page: Page, timeout_ms: int) -> bool:
-        return self._first_visible(page, self.cfg["selectors"]["logged_in"], timeout_ms) is not None
+        s = self.cfg["selectors"]
+        return self._first_visible(page, s["logged_in"] + s["profile_screen"], timeout_ms) is not None
+
+    def _on_profile_screen(self, page: Page, timeout_ms: int = 300) -> bool:
+        return self._first_visible(page, self.cfg["selectors"]["profile_screen"], timeout_ms) is not None
 
     def _wait_for_video(self, page: Page, timeout_ms: int) -> bool:
         deadline = time.time() + timeout_ms / 1000
@@ -687,6 +703,8 @@ class MagentaPlayer:
                 return "video"
             if ready and self._first_visible(page, ready, 300) is not None:
                 return "video"
+            if self._on_profile_screen(page):
+                return "profile"
             url = page.url.lower()
             if any(k in url for k in ("login", "signin", "sso", "auth", "idm.", "accounts.")):
                 return "login"
@@ -733,7 +751,8 @@ class MagentaPlayer:
 
         # "Έτοιμη σελίδα" = εμφανίστηκαν κανάλια ή τουλάχιστον το μενού της εφαρμογής.
         ready = [] if direct else tile_sel + self.cfg["selectors"]["menu"]
-        if self._wait_video_or_login(page, 20000, ready) == "login":
+        first = self._wait_video_or_login(page, 20000, ready)
+        if first == "login":
             self._login_or_manual(page)
             self._after_login(page, target, ready)
 
@@ -775,20 +794,23 @@ class MagentaPlayer:
 
     def _select_profile(self, page: Page) -> bool:
         """Αν εμφανιστεί η οθόνη επιλογής προφίλ, πατάει το προφίλ από το config ("profile")."""
+        if not self._on_profile_screen(page, 2500):
+            return False
         name = (self.cfg.get("profile") or "").strip()
         if not name:
-            return False
+            raise PlayerError("Το Magenta ζητά προφίλ – γράψε MAGENTA_PROFILE=όνομα στο .env")
         n = name.replace('"', '\\"')
         sels = self.cfg["selectors"].get("profile") or [
-            f'text=/^\\s*{n}\\s*$/i',
+            f'text="{n}"', f'text=/^\\s*{n}\\s*$/i',
             f'[title="{n}" i]', f'[aria-label="{n}" i]', f'img[alt="{n}" i]',
         ]
-        loc = self._first_visible(page, sels, 4000)
+        loc = self._first_visible(page, sels, 5000)
         if not loc:
-            return False
+            self._dump_debug(page, "profile")
+            raise PlayerError(f"Δεν βρέθηκε το προφίλ '{name}' (στοιχεία: debug/profile.png)")
         self._set("loading", f"Επιλογή προφίλ '{name}'…")
         loc.click()
-        page.wait_for_timeout(2500)
+        page.wait_for_timeout(3000)
         return True
 
     def _collect_labels(self, page: Page) -> None:
