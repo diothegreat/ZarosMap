@@ -8,7 +8,8 @@ if not exist "%~dp0vps_config.bat" (
     pause
     exit /b 1
 )
-call "%~dp0vps_config.bat"
+REM Διαβάζει ΜΟΝΟ τις γραμμές "set ..." του vps_config.bat (αγνοεί ό,τι άλλο)
+for /f "usebackq delims=" %%L in (`findstr /r /b /i /c:"[ ]*set [A-Za-z_]*=" "%~dp0vps_config.bat"`) do %%L
 :loop
 echo [%date% %time%] Σύνδεση στο %VPS_USER%@%VPS_HOST% ...
 ssh -N -T -p %VPS_SSH_PORT% ^

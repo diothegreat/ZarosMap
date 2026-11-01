@@ -25,7 +25,8 @@ if not exist "%~dp0vps_config.bat" (
     pause
     exit /b 1
 )
-call "%~dp0vps_config.bat"
+REM Διαβάζει ΜΟΝΟ τις γραμμές "set ..." του vps_config.bat (αγνοεί ό,τι άλλο)
+for /f "usebackq delims=" %%L in (`findstr /r /b /i /c:"[ ]*set [A-Za-z_]*=" "%~dp0vps_config.bat"`) do %%L
 tasklist /v /fi "WINDOWTITLE eq Magenta Tunnel*" | find /i "Magenta Tunnel" >nul
 if errorlevel 1 start "Magenta Tunnel" /min cmd /c "%~dp0tunnel.bat"
 timeout /t 4 /nobreak >nul
