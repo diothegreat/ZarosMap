@@ -456,7 +456,8 @@ class MagentaPlayer:
             time.sleep(0.25)
         self._page = pages[0] if pages else self._ctx.new_page()
         # Αν κάτι ανοίξει νέο παράθυρο/tab, το κλείνουμε.
-        self._ctx.on("page", lambda p: p.close() if p is not self._page else None)
+        # (μόνο όταν παίζει κανάλι – η σύνδεση μπορεί να ανοίξει δικό της παράθυρο)
+        self._ctx.on("page", lambda p: p.close() if (p is not self._page and self._locked) else None)
         if self._hide:
             self._set_window({"left": -32000, "top": -32000})
         return self._page
@@ -538,6 +539,8 @@ class MagentaPlayer:
         s = self.cfg["selectors"]
         t = self.cfg["timeouts_ms"]["element"]
         self._set("login", "Σύνδεση με τους κωδικούς σου…")
+        if not self._first_visible(page, s["username"] + s["password"] + s["login_entry"], 2000):
+            self._goto_login_page(page)
 
         user = self._first_visible(page, s["username"], 1500)
         if not user:
@@ -583,9 +586,17 @@ class MagentaPlayer:
             raise PlayerError("Η σύνδεση απέτυχε – έλεγξε email/κωδικό στο .env (στοιχεία: debug/login.png)")
 
     def _save_session(self) -> None:
+        """Σώζει cookies + sessionStorage/localStorage του Magenta (εκεί κρατά τη σύνδεση)."""
         try:
-            cookies = self._ctx.cookies()
-            SESSION_FILE.write_text(json.dumps(cookies), encoding="utf-8")
+            data: dict = {"cookies": self._ctx.cookies()}
+            try:
+                data["storage"] = self._page.evaluate(
+                    "() => ({origin: location.origin,"
+                    " session: Object.assign({}, sessionStorage), local: Object.assign({}, localStorage)})"
+                )
+            except PWError:
+                pass
+            SESSION_FILE.write_text(json.dumps(data), encoding="utf-8")
         except (PWError, OSError) as exc:
             print(f"[session] αποτυχία αποθήκευσης: {exc}", flush=True)
 
@@ -593,11 +604,38 @@ class MagentaPlayer:
         if not SESSION_FILE.exists():
             return
         try:
-            cookies = json.loads(SESSION_FILE.read_text(encoding="utf-8"))
-            self._ctx.add_cookies(cookies)
-            print(f"[session] φορτώθηκαν {len(cookies)} cookies", flush=True)
+            data = json.loads(SESSION_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, list):  # παλιά μορφή: μόνο cookies
+                data = {"cookies": data}
+            if data.get("cookies"):
+                self._ctx.add_cookies(data["cookies"])
+            st = data.get("storage") or {}
+            if st.get("origin", "").startswith("https://"):
+                # Ξαναβάζει το sessionStorage/localStorage ΠΡΙΝ φορτώσει η εφαρμογή.
+                self._ctx.add_init_script(
+                    "(() => { const d = " + json.dumps(st) + ";"
+                    " if (location.origin !== d.origin) return;"
+                    " try { for (const [k, v] of Object.entries(d.session || {}))"
+                    "   if (sessionStorage.getItem(k) === null) sessionStorage.setItem(k, v);"
+                    " for (const [k, v] of Object.entries(d.local || {}))"
+                    "   if (localStorage.getItem(k) === null) localStorage.setItem(k, v); } catch (e) {} })()"
+                )
+            print(f"[session] φορτώθηκαν {len(data.get('cookies', []))} cookies"
+                  f" + {len(st.get('session', {}))} session keys", flush=True)
         except (PWError, OSError, ValueError) as exc:
             print(f"[session] αποτυχία φόρτωσης: {exc}", flush=True)
+
+    def _goto_login_page(self, page: Page) -> None:
+        """Η λίστα καναλιών δεν έχει κουμπί σύνδεσης – πήγαινε στην αρχική σελίδα."""
+        url = self.cfg.get("login_url") or self.cfg.get("start_url")
+        if not url:
+            return
+        try:
+            page.goto(url, wait_until="domcontentloaded")
+            page.wait_for_timeout(2500)
+            self._accept_cookies(page)
+        except PWError as exc:
+            print(f"[login] {exc}", flush=True)
 
     def _login_or_manual(self, page: Page) -> None:
         """Αυτόματο login· αν δεν πετύχει, σε αφήνει να συνδεθείς ΜΙΑ φορά με το χέρι."""
@@ -611,6 +649,8 @@ class MagentaPlayer:
         self._manual_login(page)
 
     def _manual_login(self, page: Page) -> None:
+        if not self._first_visible(page, self.cfg["selectors"]["username"] + self.cfg["selectors"]["password"], 1000):
+            self._goto_login_page(page)
         self._show_window()
         self._set("login", "Συνδέσου ΜΙΑ φορά χειροκίνητα στο παράθυρο του Chrome που άνοιξε "
                            "(και διάλεξε προφίλ). Έχεις 3 λεπτά – μετά θα το θυμάται.")
