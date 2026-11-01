@@ -520,9 +520,13 @@ class MagentaPlayer:
         while time.time() < deadline:
             for sel in selectors:
                 try:
-                    loc = page.locator(sel).first
-                    if loc.is_visible():
-                        return loc
+                    # Μπορεί να υπάρχουν πολλά ίδια στοιχεία (π.χ. κρυφό πλαϊνό μενού):
+                    # επέστρεψε το πρώτο που ΦΑΙΝΕΤΑΙ.
+                    loc = page.locator(sel)
+                    for i in range(min(loc.count(), 30)):
+                        item = loc.nth(i)
+                        if item.is_visible():
+                            return item
                 except PWError:
                     pass
             page.wait_for_timeout(250)
@@ -801,6 +805,7 @@ class MagentaPlayer:
             raise PlayerError("Το Magenta ζητά προφίλ – γράψε MAGENTA_PROFILE=όνομα στο .env")
         n = name.replace('"', '\\"')
         sels = self.cfg["selectors"].get("profile") or [
+            f'avatar[aria-label="{n}" i]', f'avatar[aria-label^="{n} " i]',
             f'text="{n}"', f'text=/^\\s*{n}\\s*$/i',
             f'[title="{n}" i]', f'[aria-label="{n}" i]', f'img[alt="{n}" i]',
         ]
